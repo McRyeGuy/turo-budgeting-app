@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XN35MK0Q2W"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XN35MK0Q2W');
+</script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Turo Fleet Tracker — ROI clarity for your rental fleet</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="firebase-config.js"></script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  .gradient-bg { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #db2777 100%); }
+  .feature-card { transition: transform 0.2s, box-shadow 0.2s; }
+  .feature-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1); }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .fade-up { animation: fadeUp 0.6s ease-out; }
+  .icon-square { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 10px; }
+</style>
+</head>
+<body class="bg-slate-50 text-slate-900">
+
+<!-- Setup banner if Firebase not configured -->
+<div id="setupBanner" class="hidden bg-amber-50 border-b border-amber-200 text-amber-900 text-sm px-6 py-3 text-center">
+  <b>Firebase not configured.</b> Open <code class="bg-amber-100 px-1.5 py-0.5 rounded">firebase-config.js</code> and follow the setup instructions to enable Google login and cross-device sync.
+</div>
+
+<!-- Nav -->
+<header class="absolute left-0 right-0 z-30" style="top: 0;">
+  <div class="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
+    <div class="flex items-center gap-2 text-white">
+      <div class="w-9 h-9 bg-white/20 backdrop-blur rounded-lg flex items-center justify-center text-white font-bold">T</div>
+      <span class="font-bold text-lg">Turo Fleet Tracker</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="#features" class="text-white/90 hover:text-white text-sm font-medium hidden md:inline">Features</a>
+      <a href="#how" class="text-white/90 hover:text-white text-sm font-medium hidden md:inline">How it works</a>
+      <button onclick="openLogin()" class="bg-white text-indigo-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-50 shadow-md">Log in</button>
+    </div>
+  </div>
+</header>
+
+<!-- Hero -->
+<section class="gradient-bg text-white pt-32 pb-24 px-6 relative overflow-hidden">
+  <div class="absolute inset-0 opacity-20">
+    <div class="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl"></div>
+    <div class="absolute bottom-10 right-10 w-96 h-96 bg-pink-300 rounded-full blur-3xl"></div>
+  </div>
+  <div class="max-w-6xl mx-auto relative">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <div class="fade-up">
+        <div class="inline-block bg-white/15 backdrop-blur px-3 py-1 rounded-full text-xs font-medium mb-5">Built for Turo hosts</div>
+        <h1 class="text-4xl md:text-6xl font-bold leading-tight mb-5">Turn your Turo CSVs into <span class="bg-gradient-to-r from-yellow-200 to-pink-200 bg-clip-text text-transparent">real ROI clarity</span></h1>
+        <p class="text-lg md:text-xl text-white/90 mb-8 leading-relaxed">Track every car. Allocate every expense. Know exactly which vehicles are paying off, which are bleeding cash, and when to scale.</p>
+        <div class="flex flex-wrap gap-3">
+          <button onclick="openLogin()" class="bg-white text-indigo-700 px-7 py-3.5 rounded-lg font-semibold hover:bg-slate-50 shadow-lg text-base">Get started free</button>
+          <a href="#features" class="bg-white/15 backdrop-blur text-white px-7 py-3.5 rounded-lg font-semibold hover:bg-white/25 text-base">See features</a>
+        </div>
+        <div class="flex items-center gap-6 mt-8 text-sm text-white/80">
+          <div class="flex items-center gap-1.5"><span class="font-bold">+</span> No credit card</div>
+          <div class="flex items-center gap-1.5"><span class="font-bold">+</span> Encrypted</div>
+          <div class="flex items-center gap-1.5"><span class="font-bold">+</span> Sync across devices</div>
+        </div>
+      </div>
+      <div class="fade-up hidden lg:block">
+        <!-- Mock dashboard preview -->
+        <div class="bg-white rounded-2xl shadow-2xl p-5 transform rotate-1 hover:rotate-0 transition">
+          <div class="flex gap-1 mb-4">
+            <div class="w-2.5 h-2.5 rounded-full bg-rose-300"></div>
+            <div class="w-2.5 h-2.5 rounded-full bg-amber-300"></div>
+            <div class="w-2.5 h-2.5 rounded-full bg-emerald-300"></div>
+          </div>
+          <div class="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-xl p-4 text-white mb-3">
+            <div class="text-xs opacity-80">Fleet Net Worth</div>
+            <div class="text-3xl font-bold mt-1">$87,430</div>
+            <div class="text-xs mt-2 opacity-80">+18.3% annual ROI</div>
+          </div>
+          <div class="grid grid-cols-3 gap-2 mb-3">
+            <div class="bg-emerald-50 rounded-lg p-2">
+              <div class="text-xs text-emerald-700">Earned</div>
+              <div class="font-bold text-emerald-700 text-sm">$57.7k</div>
+            </div>
+            <div class="bg-rose-50 rounded-lg p-2">
+              <div class="text-xs text-rose-700">Spent</div>
+              <div class="font-bold text-rose-700 text-sm">$12.1k</div>
+            </div>
+            <div class="bg-slate-100 rounded-lg p-2">
+              <div class="text-xs text-slate-700">Profit</div>
+              <div class="font-bold text-sm">$45.6k</div>
+            </div>
+          </div>
+          <div class="space-y-2">
+            <div class="flex items-center justify-between bg-slate-50 rounded-lg p-2.5">
+              <div class="flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-indigo-500"></div>
+                <span class="text-sm font-medium">Ford Bronco Sport</span>
+              </div>
+              <span class="text-xs text-emerald-600 font-semibold">+24.1%/yr</span>
+            </div>
+            <div class="flex items-center justify-between bg-slate-50 rounded-lg p-2.5">
+              <div class="flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                <span class="text-sm font-medium">Chevy Blazer</span>
+              </div>
+              <span class="text-xs text-emerald-600 font-semibold">+19.7%/yr</span>
+            </div>
+            <div class="flex items-center justify-between bg-slate-50 rounded-lg p-2.5">
+              <div class="flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-amber-500"></div>
+                <span class="text-sm font-medium">Porsche Taycan</span>
+              </div>
+              <span class="text-xs text-amber-600 font-semibold">+8.4%/yr</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Pain points -->
+<section class="py-16 px-6 bg-white">
+  <div class="max-w-5xl mx-auto text-center">
+    <h2 class="text-3xl md:text-4xl font-bold mb-3">Stop guessing which cars actually make money</h2>
+    <p class="text-slate-600 max-w-2xl mx-auto text-lg">Most Turo hosts know their gross earnings — but not the real picture. This tracker connects the dots.</p>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 text-left">
+      <div class="bg-rose-50 border border-rose-100 rounded-xl p-6">
+        <div class="text-xs font-semibold text-rose-700 uppercase tracking-wide mb-2">Problem 1</div>
+        <div class="font-semibold mb-1">"My CSV doesn't tell me ROI"</div>
+        <div class="text-sm text-slate-600">Trip price + boost + excess miles only — minus expenses, depreciation, and loan payments — gives you the truth.</div>
+      </div>
+      <div class="bg-amber-50 border border-amber-100 rounded-xl p-6">
+        <div class="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-2">Problem 2</div>
+        <div class="font-semibold mb-1">"I lose track of expenses per car"</div>
+        <div class="text-sm text-slate-600">Allocate any expense to one car or split it across multiple. Recurring or one-off, all categorized.</div>
+      </div>
+      <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-6">
+        <div class="text-xs font-semibold text-indigo-700 uppercase tracking-wide mb-2">Problem 3</div>
+        <div class="font-semibold mb-1">"Should I buy another car?"</div>
+        <div class="text-sm text-slate-600">Smart Metrics analyzes utilization, ADR, and per-type performance to recommend exactly what to buy next.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section id="features" class="py-24 px-6 bg-slate-50 relative overflow-hidden">
+  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-br from-indigo-200/40 to-purple-200/40 blur-3xl rounded-full pointer-events-none"></div>
+
+  <div class="max-w-6xl mx-auto relative">
+    <div class="text-center mb-14">
+      <div class="inline-flex items-center gap-2 bg-white border border-indigo-100 text-indigo-700 px-4 py-1.5 rounded-full text-xs font-semibold mb-4 uppercase tracking-wider shadow-sm">
+        <span class="w-1.5 h-1.5 bg-indigo-500 rounded-full"></span>
+        Features
+      </div>
+      <h2 class="text-4xl md:text-5xl font-bold mb-4 tracking-tight">Everything you need to run a profitable fleet</h2>
+      <p class="text-slate-600 max-w-2xl mx-auto text-lg">From CSV ingestion to ROI clarity. Every tab earns its keep.</p>
+    </div>
+
+    <!-- Featured flagship card -->
+    <div class="relative bg-gradient-to-br from-indigo-600 via-purple-700 to-pink-700 text-white rounded-3xl p-8 md:p-12 mb-6 overflow-hidden shadow-xl">
+      <div class="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+      <div class="grid md:grid-cols-2 gap-8 items-center relative">
+        <div>
+          <div class="inline-block bg-white/15 backdrop-blur border border-white/20 px-3 py-1 rounded-full text-xs font-semibold mb-4 uppercase tracking-wider">Flagship</div>
+          <h3 class="text-3xl md:text-4xl font-bold mb-4 leading-tight">Smart Metrics tells you what to buy next</h3>
+          <p class="text-white/90 text-lg leading-relaxed mb-6">Vehicle-type performance analysis, optimal ADR by price band, profit projections at any fleet size, and bottleneck warnings — so you scale with confidence, not guesswork.</p>
+          <div class="grid grid-cols-3 gap-3 text-center">
+            <div class="bg-white/10 backdrop-blur rounded-xl px-3 py-3">
+              <div class="text-2xl font-bold">7</div>
+              <div class="text-xs text-white/80 mt-0.5">Vehicle types</div>
+            </div>
+            <div class="bg-white/10 backdrop-blur rounded-xl px-3 py-3">
+              <div class="text-2xl font-bold">5</div>
+              <div class="text-xs text-white/80 mt-0.5">ADR price bands</div>
+            </div>
+            <div class="bg-white/10 backdrop-blur rounded-xl px-3 py-3">
+              <div class="text-2xl font-bold">100</div>
+              <div class="text-xs text-white/80 mt-0.5">Cars projected</div>
+            </div>
+          </div>
+        </div>
+        <div class="hidden md:block">
+          <div class="bg-white rounded-2xl shadow-2xl p-5 text-slate-900 transform rotate-2">
+            <div class="text-xs text-slate-500 uppercase tracking-wide font-semibold mb-2">Top Performer</div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="font-bold text-lg">Ford Bronco Sport</span>
+              <span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-xs font-semibold">+24.1%/yr</span>
+            </div>
+            <div class="space-y-2 text-sm">
+              <div class="flex justify-between"><span class="text-slate-500">Utilization</span><span class="font-semibold">64.7%</span></div>
+              <div class="flex justify-between"><span class="text-slate-500">ADR</span><span class="font-semibold">$48.29</span></div>
+              <div class="flex justify-between"><span class="text-slate-500">Avg trip length</span><span class="font-semibold">4.6 days</span></div>
+            </div>
+            <div class="mt-3 pt-3 border-t border-slate-100">
+              <div class="text-xs text-slate-500 mb-1">Recommendation</div>
+              <div class="text-sm font-semibold text-indigo-600">Buy another SUV →</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grid of features -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div class="feature-card bg-white rounded-2xl p-7 border border-slate-200 group">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 text-white flex items-center justify-center mb-5 shadow-md shadow-indigo-200 group-hover:scale-110 transition-transform">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
+        </div>
+        <h3 class="font-bold text-lg mb-2">Dashboard</h3>
+        <p class="text-sm text-slate-600 leading-relaxed">Fleet net worth, total earnings, expenses, profit, and ROI. Stacked-by-car earnings chart you can flip between views.</p>
+      </div>
+
+      <div class="feature-card bg-white rounded-2xl p-7 border border-slate-200 group">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white flex items-center justify-center mb-5 shadow-md shadow-emerald-200 group-hover:scale-110 transition-transform">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </div>
+        <h3 class="font-bold text-lg mb-2">Per-car deep dive</h3>
+        <p class="text-sm text-slate-600 leading-relaxed">Click any car for utilization, ADR, breakeven, payback period, depreciation projections, and a monthly chart.</p>
+      </div>
+
+      <div class="feature-card bg-white rounded-2xl p-7 border border-slate-200 group">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500 to-rose-600 text-white flex items-center justify-center mb-5 shadow-md shadow-rose-200 group-hover:scale-110 transition-transform">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21l-7-4-7 4V5a2 2 0 012-2h10a2 2 0 012 2v16z"/></svg>
+        </div>
+        <h3 class="font-bold text-lg mb-2">Smart expenses</h3>
+        <p class="text-sm text-slate-600 leading-relaxed">One-off or recurring. Apply to one car or split across many — perfect for shop visits or insurance.</p>
+      </div>
+
+      <div class="feature-card bg-white rounded-2xl p-7 border border-slate-200 group">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center mb-5 shadow-md shadow-amber-200 group-hover:scale-110 transition-transform">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h1m3 0h1m3 0h1m3 0h1m3 0h1M4 18h1m3 0h1m3 0h1m3 0h1m3 0h1M4 12h16"/></svg>
+        </div>
+        <h3 class="font-bold text-lg mb-2">VIN auto-decode</h3>
+        <p class="text-sm text-slate-600 leading-relaxed">Drop your CSV and we decode the VIN via NHTSA — year, make, model, trim. Mileage pulled from check-in odometer.</p>
+      </div>
+
+      <div class="feature-card bg-white rounded-2xl p-7 border border-slate-200 group">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 text-white flex items-center justify-center mb-5 shadow-md shadow-purple-200 group-hover:scale-110 transition-transform">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+        </div>
+        <h3 class="font-bold text-lg mb-2">Loans &amp; financing</h3>
+        <p class="text-sm text-slate-600 leading-relaxed">Track loan terms per car. Payments auto-flow into expenses; outstanding balance reduces net worth.</p>
+      </div>
+
+      <div class="feature-card bg-white rounded-2xl p-7 border border-slate-200 group">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-cyan-600 text-white flex items-center justify-center mb-5 shadow-md shadow-cyan-200 group-hover:scale-110 transition-transform">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+        </div>
+        <h3 class="font-bold text-lg mb-2">Mileage-aware values</h3>
+        <p class="text-sm text-slate-600 leading-relaxed">Current values use a tiered depreciation curve adjusted for actual miles — plus a KBB lookup link for ground truth.</p>
+      </div>
+
+      <div class="feature-card bg-white rounded-2xl p-7 border border-slate-200 group">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 text-white flex items-center justify-center mb-5 shadow-md shadow-orange-200 group-hover:scale-110 transition-transform">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        </div>
+        <h3 class="font-bold text-lg mb-2">Photo library</h3>
+        <p class="text-sm text-slate-600 leading-relaxed">Upload a photo for each car. Shows on dashboard cards and in the detail view so you can ID them at a glance.</p>
+      </div>
+
+      <div class="feature-card bg-white rounded-2xl p-7 border border-slate-200 group">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 text-white flex items-center justify-center mb-5 shadow-md shadow-teal-200 group-hover:scale-110 transition-transform">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        </div>
+        <h3 class="font-bold text-lg mb-2">Cross-device sync</h3>
+        <p class="text-sm text-slate-600 leading-relaxed">Log in from your phone, laptop, or tablet. Your data is encrypted and synced automatically through your account.</p>
+      </div>
+
+      <div class="feature-card bg-white rounded-2xl p-7 border border-slate-200 group">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500 to-pink-600 text-white flex items-center justify-center mb-5 shadow-md shadow-pink-200 group-hover:scale-110 transition-transform">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+        </div>
+        <h3 class="font-bold text-lg mb-2">100% private</h3>
+        <p class="text-sm text-slate-600 leading-relaxed">Your data lives in your encrypted account. Export a backup anytime. No selling data, no ads, ever.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How it works -->
+<section id="how" class="py-20 px-6 bg-white">
+  <div class="max-w-5xl mx-auto">
+    <div class="text-center mb-14">
+      <div class="inline-block bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-semibold mb-3">3 STEPS</div>
+      <h2 class="text-3xl md:text-4xl font-bold mb-3">From CSV to clarity in 60 seconds</h2>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div class="text-center">
+        <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-2xl flex items-center justify-center text-2xl font-bold mx-auto mb-4">1</div>
+        <h3 class="font-bold text-lg mb-2">Drop your CSVs</h3>
+        <p class="text-sm text-slate-600">Export your earnings from Turo and upload them. The tracker auto-detects every vehicle, decodes VINs, and pulls mileage.</p>
+      </div>
+      <div class="text-center">
+        <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-2xl flex items-center justify-center text-2xl font-bold mx-auto mb-4">2</div>
+        <h3 class="font-bold text-lg mb-2">Add purchase + expenses</h3>
+        <p class="text-sm text-slate-600">Enter what you paid for each car and any expenses (windshield wipers, insurance, oil changes). Recurring or one-off.</p>
+      </div>
+      <div class="text-center">
+        <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-2xl flex items-center justify-center text-2xl font-bold mx-auto mb-4">3</div>
+        <h3 class="font-bold text-lg mb-2">See the truth</h3>
+        <p class="text-sm text-slate-600">ROI per car. Net worth. Best performer. Optimal price band. Whether you should buy another. All updated live.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="gradient-bg text-white py-20 px-6">
+  <div class="max-w-3xl mx-auto text-center">
+    <h2 class="text-3xl md:text-4xl font-bold mb-4">Ready to see what your fleet really earns?</h2>
+    <p class="text-lg text-white/90 mb-8">It's free, syncs across devices, and you can be looking at real numbers in under a minute.</p>
+    <button onclick="openLogin()" class="bg-white text-indigo-700 px-8 py-4 rounded-lg font-semibold hover:bg-slate-50 shadow-lg text-lg">Log in to your account</button>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="bg-slate-900 text-slate-400 py-10 px-6">
+  <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-2">
+      <div class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">T</div>
+      <span class="font-semibold text-white">Turo Fleet Tracker</span>
+    </div>
+    <div class="text-sm">Built for fleet operators who want real numbers. Encrypted, synced, secure.</div>
+  </div>
+</footer>
+
+<!-- LOGIN MODAL -->
+<div id="loginModal" class="hidden fixed inset-0 z-50 flex items-center justify-center" style="background-color: rgba(15,23,42,0.7);">
+  <div class="bg-white rounded-2xl w-full max-w-md mx-4 p-8 shadow-2xl">
+    <div class="text-center mb-6">
+      <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-xl mx-auto mb-3">T</div>
+      <h2 id="loginTitle" class="text-2xl font-bold">Welcome back</h2>
+      <p id="loginSubtitle" class="text-sm text-slate-500 mt-1">Log in to access your fleet from any device</p>
+    </div>
+
+    <div class="space-y-3">
+      <div id="signupNameWrap" class="hidden">
+        <label class="text-xs font-medium text-slate-600">Your name</label>
+        <input type="text" id="loginName" placeholder="Jane Doe" class="w-full px-4 py-3 border border-slate-300 rounded-lg text-sm mt-1 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+      </div>
+      <div>
+        <label class="text-xs font-medium text-slate-600">Email</label>
+        <input type="email" id="loginEmail" placeholder="you@example.com" class="w-full px-4 py-3 border border-slate-300 rounded-lg text-sm mt-1 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+      </div>
+      <div>
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-medium text-slate-600">Password</label>
+          <button onclick="forgotPassword()" id="forgotLink" class="text-xs text-indigo-600 hover:underline">Forgot?</button>
+        </div>
+        <input type="password" id="loginPassword" placeholder="At least 6 characters" class="w-full px-4 py-3 border border-slate-300 rounded-lg text-sm mt-1 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+      </div>
+    </div>
+
+    <div id="loginError" class="hidden mt-3 text-sm text-rose-600 bg-rose-50 border border-rose-200 rounded p-2"></div>
+
+    <button id="primaryActionBtn" onclick="doEmailAuth()" class="w-full mt-4 bg-gradient-to-br from-indigo-600 to-purple-700 hover:from-indigo-700 hover:to-purple-800 text-white py-3 rounded-lg text-sm font-semibold shadow-md disabled:opacity-50">Log in</button>
+
+    <div class="text-center mt-4 text-sm">
+      <span id="modeToggleText" class="text-slate-500">Don't have an account?</span>
+      <button onclick="toggleAuthMode()" id="modeToggleBtn" class="text-indigo-600 hover:underline font-medium">Sign up</button>
+    </div>
+
+    <button onclick="closeLogin()" class="w-full mt-3 text-xs text-slate-500 hover:text-slate-700">Cancel</button>
+  </div>
+</div>
+
+<script>
+let authMode = 'login'; // or 'signup'
+
+function showSetupBanner() {
+  document.getElementById('setupBanner').classList.remove('hidden');
+}
+
+if (!window.isFirebaseConfigured()) {
+  showSetupBanner();
+}
+
+// Initialize Firebase only if configured
+let auth = null;
+try {
+  if (window.isFirebaseConfigured()) {
+    firebase.initializeApp(window.FIREBASE_CONFIG);
+    auth = firebase.auth();
+
+    // If already logged in, send to app
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        // Don't auto-redirect; instead show floating banner
+        showLoggedInBanner(user);
+      }
+    });
+  }
+} catch (e) {
+  console.error('Firebase init failed:', e);
+}
+
+function showLoggedInBanner(user) {
+  const existing = document.getElementById('loggedInBanner');
+  if (existing) return;
+  const banner = document.createElement('div');
+  banner.id = 'loggedInBanner';
+  banner.className = 'fixed left-1/2 -translate-x-1/2 bg-white rounded-full shadow-lg border border-slate-200 px-5 py-2 flex items-center gap-3 z-40';
+  banner.style.top = '5rem';
+  banner.innerHTML = `
+    <span class="text-sm">Logged in as <b>${escapeHtml(user.displayName || user.email)}</b></span>
+    <a href="index.html" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-1.5 rounded-full font-semibold">Continue</a>
+    <button id="signOutBtn" class="text-xs text-slate-400 hover:text-slate-600">Switch</button>
+  `;
+  document.body.appendChild(banner);
+  document.getElementById('signOutBtn').addEventListener('click', async () => {
+    await auth.signOut();
+    banner.remove();
+  });
+}
+
+function openLogin() {
+  if (!window.isFirebaseConfigured()) {
+    alert('Firebase is not configured yet. Open firebase-config.js and follow the setup instructions before logging in.');
+    return;
+  }
+  document.getElementById('loginModal').classList.remove('hidden');
+  setMode('login');
+  setTimeout(() => document.getElementById('loginEmail').focus(), 100);
+}
+
+function closeLogin() {
+  document.getElementById('loginModal').classList.add('hidden');
+  document.getElementById('loginError').classList.add('hidden');
+}
+
+function setMode(mode) {
+  authMode = mode;
+  if (mode === 'signup') {
+    document.getElementById('loginTitle').textContent = 'Create your account';
+    document.getElementById('loginSubtitle').textContent = 'Free, encrypted, syncs across devices';
+    document.getElementById('signupNameWrap').classList.remove('hidden');
+    document.getElementById('primaryActionBtn').textContent = 'Sign up';
+    document.getElementById('modeToggleText').textContent = 'Already have an account?';
+    document.getElementById('modeToggleBtn').textContent = 'Log in';
+    document.getElementById('forgotLink').classList.add('hidden');
+  } else {
+    document.getElementById('loginTitle').textContent = 'Welcome back';
+    document.getElementById('loginSubtitle').textContent = 'Log in to access your fleet from any device';
+    document.getElementById('signupNameWrap').classList.add('hidden');
+    document.getElementById('primaryActionBtn').textContent = 'Log in';
+    document.getElementById('modeToggleText').textContent = "Don't have an account?";
+    document.getElementById('modeToggleBtn').textContent = 'Sign up';
+    document.getElementById('forgotLink').classList.remove('hidden');
+  }
+  document.getElementById('loginError').classList.add('hidden');
+}
+
+function toggleAuthMode() { setMode(authMode === 'login' ? 'signup' : 'login'); }
+
+function showError(msg) {
+  const el = document.getElementById('loginError');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+
+function friendlyError(code) {
+  const map = {
+    'auth/invalid-email': 'That email address looks invalid.',
+    'auth/user-not-found': 'No account exists for that email. Try signing up.',
+    'auth/wrong-password': 'Wrong password. Try again or reset it.',
+    'auth/email-already-in-use': 'An account with that email already exists. Try logging in.',
+    'auth/weak-password': 'Password must be at least 6 characters.',
+    'auth/network-request-failed': 'Network error. Check your connection and try again.',
+    'auth/too-many-requests': 'Too many attempts. Wait a minute and try again.',
+    'auth/invalid-credential': 'Email or password is incorrect.',
+    'auth/operation-not-allowed': 'Email/Password sign-in is not enabled in Firebase. Open the Firebase console → Authentication → Sign-in method → enable Email/Password.',
+    'auth/configuration-not-found': 'Firebase Authentication is not set up yet. Open the Firebase console → Authentication → Get started, then enable Email/Password.',
+    'auth/api-key-not-valid': 'API key in firebase-config.js is wrong. Re-copy it from your Firebase project settings.',
+    'auth/unauthorized-domain': 'This domain is not in the Authorized domains list. In Firebase: Authentication → Settings → Authorized domains.'
+  };
+  return map[code] || ('Error: ' + (code || 'unknown') + '. Open the browser console (F12) for details.');
+}
+
+async function doEmailAuth() {
+  if (!auth) return;
+  document.getElementById('loginError').classList.add('hidden');
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const name = document.getElementById('loginName').value.trim();
+  if (!email || !password) { showError('Please enter email and password.'); return; }
+  if (authMode === 'signup' && !name) { showError('Please enter your name.'); return; }
+  if (authMode === 'signup' && password.length < 6) { showError('Password must be at least 6 characters.'); return; }
+  const btn = document.getElementById('primaryActionBtn');
+  btn.disabled = true;
+  btn.textContent = authMode === 'signup' ? 'Creating account...' : 'Logging in...';
+  try {
+    if (authMode === 'signup') {
+      const cred = await auth.createUserWithEmailAndPassword(email, password);
+      if (name) await cred.user.updateProfile({ displayName: name });
+    } else {
+      await auth.signInWithEmailAndPassword(email, password);
+    }
+    window.location.href = 'index.html';
+  } catch (e) {
+    console.error('Auth error:', e.code, e.message, e);
+    showError(friendlyError(e.code));
+    btn.disabled = false;
+    btn.textContent = authMode === 'signup' ? 'Sign up' : 'Log in';
+  }
+}
+
+async function forgotPassword() {
+  const email = document.getElementById('loginEmail').value.trim();
+  if (!email) { showError('Enter your email above first, then click Forgot.'); return; }
+  if (!auth) return;
+  try {
+    await auth.sendPasswordResetEmail(email);
+    showError('Password reset email sent to ' + email + '. Check your inbox.');
+    document.getElementById('loginError').classList.remove('text-rose-600','bg-rose-50','border-rose-200');
+    document.getElementById('loginError').classList.add('text-emerald-700','bg-emerald-50','border-emerald-200');
+  } catch (e) {
+    showError(friendlyError(e.code));
+  }
+}
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    const id = a.getAttribute('href').slice(1);
+    const el = document.getElementById(id);
+    if (el) { e.preventDefault(); el.scrollIntoView({ behavior: 'smooth' }); }
+  });
+});
+
+document.getElementById('loginEmail').addEventListener('keydown', (e) => { if (e.key === 'Enter') doEmailAuth(); });
+document.getElementById('loginPassword').addEventListener('keydown', (e) => { if (e.key === 'Enter') doEmailAuth(); });
+document.getElementById('loginName').addEventListener('keydown', (e) => { if (e.key === 'Enter') doEmailAuth(); });
+</script>
+</body>
+</html>
