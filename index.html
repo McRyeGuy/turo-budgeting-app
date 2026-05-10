@@ -21,9 +21,11 @@
 <script src="firebase-config.js"></script>
 <style>
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-  .tab-active { background-color: #0f172a; color: white; }
-  .tab-inactive { background-color: white; color: #334155; }
-  .tab-inactive:hover { background-color: #f1f5f9; }
+  .tab-active { background-color: #0f172a; color: white; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+  .tab-inactive { background-color: white; color: #334155; border: 1px solid #e2e8f0; }
+  .tab-inactive:hover { background-color: #f1f5f9; border-color: #cbd5e1; }
+  .tab-btn { transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease; outline-offset: 2px; }
+  .tab-btn:focus-visible { outline: 2px solid #6366f1; }
   .car-color-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
   input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
   input[type="number"] { -moz-appearance: textfield; }
@@ -81,6 +83,16 @@
     z-index: 9999;
     pointer-events: none;
   }
+  /* Card hover lift */
+  .bg-white.rounded-xl { transition: box-shadow 0.2s ease, transform 0.2s ease; }
+  .bg-white.rounded-xl:hover:not([id*="Modal"]):not(.tutorial-popup) { box-shadow: 0 8px 24px -6px rgba(0,0,0,0.10); }
+  /* Header shadow on scroll */
+  header { box-shadow: 0 1px 3px rgba(0,0,0,0.07); }
+  /* General button transitions */
+  button:not(.tab-btn) { transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease; }
+  button:not(.tab-btn):active:not([disabled]) { transform: scale(0.97); }
+  button:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; border-radius: 6px; }
+  select:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
 </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen">
@@ -95,13 +107,13 @@
         <p class="text-xs text-slate-500">Earnings &amp; expenses by vehicle</p>
       </div>
     </div>
-    <nav class="flex gap-2">
-      <button data-tab="dashboard" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium tab-active">Dashboard</button>
-      <button data-tab="cars" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium tab-inactive">Cars</button>
-      <button data-tab="expenses" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium tab-inactive">Expenses</button>
-      <button data-tab="smart" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium tab-inactive">Smart Metrics</button>
-      <button data-tab="upload" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium tab-inactive">Upload CSV</button>
-      <button id="settingsBtn" class="px-3 py-2 rounded-lg text-sm font-medium text-slate-500 hover:bg-slate-100" title="Settings">Settings</button>
+    <nav class="flex gap-1.5 overflow-x-auto">
+      <button data-tab="dashboard" onclick="switchTab('dashboard')" class="tab-btn px-4 py-2.5 rounded-lg text-sm font-medium tab-active whitespace-nowrap">Dashboard</button>
+      <button data-tab="cars" onclick="switchTab('cars')" class="tab-btn px-4 py-2.5 rounded-lg text-sm font-medium tab-inactive whitespace-nowrap">Cars</button>
+      <button data-tab="expenses" onclick="switchTab('expenses')" class="tab-btn px-4 py-2.5 rounded-lg text-sm font-medium tab-inactive whitespace-nowrap">Expenses</button>
+      <button data-tab="smart" onclick="switchTab('smart')" class="tab-btn px-4 py-2.5 rounded-lg text-sm font-medium tab-inactive whitespace-nowrap">Smart Metrics</button>
+      <button data-tab="upload" onclick="switchTab('upload')" class="tab-btn px-4 py-2.5 rounded-lg text-sm font-medium tab-inactive whitespace-nowrap">Upload CSV</button>
+      <button id="settingsBtn" class="px-3 py-2.5 rounded-lg text-sm font-medium text-slate-500 hover:bg-slate-100 border border-transparent hover:border-slate-200 transition-colors whitespace-nowrap" title="Settings">⚙ Settings</button>
       <div class="flex items-center gap-2 ml-2 pl-3 border-l border-slate-200">
         <div id="headerUserInitial" class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-sm font-bold flex items-center justify-center">·</div>
         <button onclick="logout()" class="text-xs text-slate-500 hover:text-rose-600 font-medium" title="Log out">Log out</button>
@@ -831,6 +843,7 @@ try {
 
 // Wait for auth state, then proceed
 let authReady = new Promise((resolve) => {
+  if (!firebaseAuth) { window.location.replace('landing.html'); return; }
   firebaseAuth.onAuthStateChanged((user) => {
     if (!user) {
       window.location.replace('landing.html');
