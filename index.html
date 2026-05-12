@@ -21,27 +21,25 @@
 <script src="firebase-config.js"></script>
 <style>
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-  .tab-active { background-color: #0f172a; color: white; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
-  .tab-inactive { background-color: white; color: #334155; border: 1px solid #e2e8f0; }
-  .tab-inactive:hover { background-color: #f1f5f9; border-color: #cbd5e1; }
-  .tab-btn { transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease; outline-offset: 2px; }
-  .tab-btn:focus-visible { outline: 2px solid #6366f1; }
+  .tab-active { background-color: #0f172a; color: white; }
+  .tab-inactive { background-color: white; color: #334155; }
+  .tab-inactive:hover { background-color: #f1f5f9; }
   .car-color-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
   input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
   input[type="number"] { -moz-appearance: textfield; }
   .modal-backdrop { background-color: rgba(15, 23, 42, 0.6); }
-  /* Tutorial spotlight — glow ring only, no screen dim */
+  /* Tutorial spotlight */
   .tutorial-target {
     position: relative !important;
     z-index: 10000 !important;
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.85), 0 0 24px 4px rgba(99, 102, 241, 0.45);
+    box-shadow: 0 0 0 6px rgba(99, 102, 241, 0.6), 0 0 0 9999px rgba(15, 23, 42, 0.65);
     border-radius: 10px !important;
     transition: box-shadow 0.25s;
     animation: tutorialPulse 2s infinite;
   }
   @keyframes tutorialPulse {
-    0%, 100% { box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.85), 0 0 24px 4px rgba(99, 102, 241, 0.45); }
-    50% { box-shadow: 0 0 0 7px rgba(99, 102, 241, 0.55), 0 0 32px 8px rgba(99, 102, 241, 0.35); }
+    0%, 100% { box-shadow: 0 0 0 6px rgba(99, 102, 241, 0.6), 0 0 0 9999px rgba(15, 23, 42, 0.65); }
+    50% { box-shadow: 0 0 0 10px rgba(99, 102, 241, 0.4), 0 0 0 9999px rgba(15, 23, 42, 0.65); }
   }
   .tutorial-popup {
     position: fixed;
@@ -83,16 +81,6 @@
     z-index: 9999;
     pointer-events: none;
   }
-  /* Card hover lift */
-  .bg-white.rounded-xl { transition: box-shadow 0.2s ease, transform 0.2s ease; }
-  .bg-white.rounded-xl:hover:not([id*="Modal"]):not(.tutorial-popup) { box-shadow: 0 8px 24px -6px rgba(0,0,0,0.10); }
-  /* Header shadow on scroll */
-  header { box-shadow: 0 1px 3px rgba(0,0,0,0.07); }
-  /* General button transitions */
-  button:not(.tab-btn) { transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease; }
-  button:not(.tab-btn):active:not([disabled]) { transform: scale(0.97); }
-  button:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; border-radius: 6px; }
-  select:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
 </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen">
@@ -107,13 +95,14 @@
         <p class="text-xs text-slate-500">Earnings &amp; expenses by vehicle</p>
       </div>
     </div>
-    <nav class="flex gap-1.5 overflow-x-auto">
-      <button data-tab="dashboard" onclick="switchTab('dashboard')" class="tab-btn px-4 py-2.5 rounded-lg text-sm font-medium tab-active whitespace-nowrap">Dashboard</button>
-      <button data-tab="cars" onclick="switchTab('cars')" class="tab-btn px-4 py-2.5 rounded-lg text-sm font-medium tab-inactive whitespace-nowrap">Cars</button>
-      <button data-tab="expenses" onclick="switchTab('expenses')" class="tab-btn px-4 py-2.5 rounded-lg text-sm font-medium tab-inactive whitespace-nowrap">Expenses</button>
-      <button data-tab="smart" onclick="switchTab('smart')" class="tab-btn px-4 py-2.5 rounded-lg text-sm font-medium tab-inactive whitespace-nowrap">Smart Metrics</button>
-      <button data-tab="upload" onclick="switchTab('upload')" class="tab-btn px-4 py-2.5 rounded-lg text-sm font-medium tab-inactive whitespace-nowrap">Upload CSV</button>
-      <button id="settingsBtn" class="px-3 py-2.5 rounded-lg text-sm font-medium text-slate-500 hover:bg-slate-100 border border-transparent hover:border-slate-200 transition-colors whitespace-nowrap" title="Settings">⚙ Settings</button>
+    <nav class="flex gap-2">
+      <button data-tab="dashboard" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium tab-active">Dashboard</button>
+      <button data-tab="cars" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium tab-inactive">Cars</button>
+      <button data-tab="expenses" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium tab-inactive">Expenses</button>
+      <button data-tab="smart" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium tab-inactive">Smart Metrics</button>
+      <button data-tab="upload" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium tab-inactive">Upload CSV</button>
+      <button data-tab="donations" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium tab-inactive">Donations</button>
+      <button id="settingsBtn" class="px-3 py-2 rounded-lg text-sm font-medium text-slate-500 hover:bg-slate-100" title="Settings">Settings</button>
       <div class="flex items-center gap-2 ml-2 pl-3 border-l border-slate-200">
         <div id="headerUserInitial" class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-sm font-bold flex items-center justify-center">·</div>
         <button onclick="logout()" class="text-xs text-slate-500 hover:text-rose-600 font-medium" title="Log out">Log out</button>
@@ -187,35 +176,23 @@
       </div>
     </div>
 
-<!-- Earnings summary + pie chart -->
+    <!-- Earnings chart -->
     <div class="bg-white rounded-xl p-6 border border-slate-200 mb-6">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+      <div class="flex items-center justify-between mb-4">
         <div>
-          <div id="earningsBigTotal" class="text-4xl font-bold">$0</div>
-          <p class="text-sm text-slate-500 mt-1" id="earningsBigSub">Total earnings minus tolls and gas reimbursements</p>
-          <details class="mt-4 group">
-            <summary class="cursor-pointer text-sm font-medium text-indigo-600 hover:text-indigo-800 select-none">
-              <span class="group-open:hidden">Why is this different from my Turo earnings tab? ▾</span>
-              <span class="hidden group-open:inline">Hide explanation ▴</span>
-            </summary>
-            <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mt-3 text-sm text-amber-900">
-              <p class="leading-relaxed mb-2">Turo's earnings tab shows everything that hit your account, including reimbursements for things you already paid out of pocket. This tracker subtracts those out so the number reflects what you actually <em>kept</em>.</p>
-              <p class="leading-relaxed mb-2"><b>Tolls &amp; tickets</b> and <b>gas reimbursements</b> are not income — they're guests paying you back for tolls, parking tickets, or gas they used. That money has to go right back out to cover the bill, so counting it as earnings would inflate your profit.</p>
-              <p class="leading-relaxed mb-2">Formula used here:</p>
-              <div class="bg-white border border-amber-200 rounded p-3 font-mono text-xs text-slate-800 mb-2">
-                earnings = Total earnings − Tolls &amp; tickets − Gas reimbursement
-                <span id="fuelFeeFormulaLine"> &nbsp;+ ($10 × number of gas reimbursements)</span>
-              </div>
-              <p class="leading-relaxed text-xs"><b>Optional $10 fuel fee:</b> when the toggle in Settings is on, $10 is added back per trip with a gas reimbursement — representing your fuel service fee on top of what the gas actually cost. Toggle it off in Settings to remove this.</p>
-            </div>
-          </details>
+          <h3 class="font-semibold">Earnings over time</h3>
+          <p class="text-xs text-slate-500">Monthly totals by vehicle</p>
         </div>
-        <div>
-          <div class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Earnings by vehicle</div>
-          <div class="relative" style="height: 240px;">
-            <canvas id="earningsPie"></canvas>
-            <div id="pieEmpty" class="hidden absolute inset-0 flex items-center justify-center text-slate-400 text-sm">No earnings yet</div>
-          </div>
+        <div class="flex gap-1 text-xs bg-slate-100 rounded-lg p-1">
+          <button data-chart="stacked" class="chart-mode-btn px-3 py-1.5 rounded-md bg-white shadow-sm font-medium">By car</button>
+          <button data-chart="total" class="chart-mode-btn px-3 py-1.5 rounded-md text-slate-600">Total</button>
+          <button data-chart="netprofit" class="chart-mode-btn px-3 py-1.5 rounded-md text-slate-600">Net profit</button>
+        </div>
+      </div>
+      <div class="relative" style="height: 320px;">
+        <canvas id="earningsChart"></canvas>
+        <div id="chartEmpty" class="hidden absolute inset-0 flex items-center justify-center text-slate-400 text-sm">
+          Upload a Turo CSV to see your earnings chart
         </div>
       </div>
     </div>
@@ -376,6 +353,60 @@
     </div>
   </section>
 
+  <!-- DONATIONS -->
+  <section id="tab-donations" class="tab-panel hidden">
+    <div class="mb-6">
+      <h2 class="text-2xl font-bold">Donations &amp; Feedback</h2>
+      <p class="text-sm text-slate-500">Support the project and shape what gets built next</p>
+    </div>
+
+    <!-- Donation cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div class="bg-gradient-to-br from-indigo-600 to-purple-700 text-white rounded-xl p-6">
+        <h3 class="text-lg font-bold">Support the project</h3>
+        <p class="text-sm opacity-90 mt-1">If this tracker is saving you time, throw a few bucks back. Helps keep features coming.</p>
+        <div class="mt-4 flex gap-2 flex-wrap">
+          <a href="https://buymeacoffee.com/" target="_blank" rel="noopener" class="px-4 py-2 bg-white text-indigo-700 rounded-lg text-sm font-semibold hover:bg-slate-50">Buy Me a Coffee ↗</a>
+          <a href="https://venmo.com/" target="_blank" rel="noopener" class="px-4 py-2 bg-white/15 text-white rounded-lg text-sm font-semibold hover:bg-white/25">Venmo ↗</a>
+          <a href="https://paypal.com/" target="_blank" rel="noopener" class="px-4 py-2 bg-white/15 text-white rounded-lg text-sm font-semibold hover:bg-white/25">PayPal ↗</a>
+        </div>
+      </div>
+      <div class="bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-xl p-6">
+        <h3 class="text-lg font-bold">Sponsor a feature</h3>
+        <p class="text-sm opacity-90 mt-1">Sponsor a specific feature, or commission a custom build for your fleet operation.</p>
+        <div class="mt-4">
+          <a id="getInTouchLink" href="#" onclick="openGetInTouchEmail(); return false;" class="px-4 py-2 bg-white text-emerald-700 rounded-lg text-sm font-semibold hover:bg-slate-50">Get in touch</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recommend an upgrade -->
+    <div class="bg-white rounded-xl border border-slate-200 p-6 mb-6">
+      <h3 class="font-semibold mb-1">Recommend an upgrade</h3>
+      <p class="text-xs text-slate-500 mb-4">Got an idea for a feature or improvement? Submit it below — your idea is saved to your account and emailed to the developer for review.</p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <input type="text" id="suggestionTitle" placeholder="Short title (e.g. 'Add Excel export')" class="md:col-span-2 px-3 py-2 border border-slate-300 rounded-lg text-sm" />
+        <select id="suggestionPriority" class="px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white">
+          <option value="low">Nice to have</option>
+          <option value="medium" selected>Useful</option>
+          <option value="high">Must have</option>
+        </select>
+      </div>
+      <textarea id="suggestionDesc" rows="3" placeholder="Describe what you'd like to see and why it would help your business..." class="w-full mt-3 px-3 py-2 border border-slate-300 rounded-lg text-sm resize-none"></textarea>
+      <div class="flex justify-end mt-3">
+        <button onclick="addSuggestion()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium">Submit suggestion</button>
+      </div>
+    </div>
+
+    <!-- Suggestions list -->
+    <div class="bg-white rounded-xl border border-slate-200 p-6">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-semibold">Your suggestions</h3>
+        <span id="suggestionCount" class="text-xs text-slate-500"></span>
+      </div>
+      <div id="suggestionsList"></div>
+    </div>
+  </section>
 
 </main>
 
@@ -794,13 +825,6 @@
         <div class="font-medium">Show getting-started tutorial</div>
         <div class="text-xs text-slate-500">Walk through the steps to get accurate numbers</div>
       </button>
-      <label class="flex items-start justify-between gap-3 w-full text-left px-4 py-3 border border-slate-200 rounded-lg hover:bg-slate-50 text-sm cursor-pointer">
-        <div class="flex-1">
-          <div class="font-medium">Add $10 fuel fee per gas reimbursement</div>
-          <div class="text-xs text-slate-500">When ON: every trip with a gas reimbursement adds $10 to your earnings (your service fee on top of the gas you bill back).</div>
-        </div>
-        <input type="checkbox" id="fuelFeeToggle" onchange="toggleFuelFeeSetting()" class="mt-1 w-5 h-5 accent-indigo-600" />
-      </label>
       <button onclick="exportData()" class="w-full text-left px-4 py-3 border border-slate-200 rounded-lg hover:bg-slate-50 text-sm">
         <div class="font-medium">Export backup</div>
         <div class="text-xs text-slate-500">Download a JSON file of all your data</div>
@@ -843,7 +867,6 @@ try {
 
 // Wait for auth state, then proceed
 let authReady = new Promise((resolve) => {
-  if (!firebaseAuth) { window.location.replace('landing.html'); return; }
   firebaseAuth.onAuthStateChanged((user) => {
     if (!user) {
       window.location.replace('landing.html');
@@ -874,7 +897,7 @@ let state = {
 };
 
 let chartInstance = null;
-let currentChartMode = 'turo';
+let currentChartMode = 'stacked';
 let currentDashRange = 'all';
 
 function loadState() {
@@ -928,41 +951,6 @@ async function loadFromFirestore() {
   }
 }
 function uid() { return Math.random().toString(36).slice(2, 10) + Date.now().toString(36); }
-
-// ====== EARNINGS FORMULA ======
-//   earnings = Total earnings − Tolls & tickets − Gas reimbursement
-//              + ($10 per gas reimbursement, if "fuel fee" toggle is ON)
-const FUEL_FEE_BONUS = 10;
-function fuelFeeEnabled() {
-  // Default ON; user can toggle off in Settings
-  return state && state.fuelFeeEnabled !== false;
-}
-function tripEarn(t) {
-  if (!t) return 0;
-  const total = Number(t.earnings) || 0;
-  const tolls = Number(t.tollsAndTickets) || 0;
-  const gas = Number(t.gasReimbursement) || 0;
-  let takeHome = total - tolls - gas;
-  if (fuelFeeEnabled() && gas > 0) takeHome += FUEL_FEE_BONUS;
-  return takeHome;
-}
-// Used for the dashboard chart's main bars
-function tripRentalIncome(t) {
-  if (!t) return 0;
-  const total = Number(t.earnings) || 0;
-  const tolls = Number(t.tollsAndTickets) || 0;
-  const gas = Number(t.gasReimbursement) || 0;
-  return total - tolls - gas;
-}
-// Used for the dashboard chart's green bars (fuel-fee bonus only)
-function tripReimbursement(t) {
-  if (!t) return 0;
-  const gas = Number(t.gasReimbursement) || 0;
-  return (fuelFeeEnabled() && gas > 0) ? FUEL_FEE_BONUS : 0;
-}
-// No-op stubs kept for backwards compat with existing call sites
-function fleetMissingPlan() { return []; }
-function ensureProtectionPlans() { /* protection plan removed */ }
 
 // ============== UTIL ==============
 function fmt$(n) {
@@ -1034,6 +1022,7 @@ function switchTab(name) {
   if (name === 'expenses') renderExpenses();
   if (name === 'upload') renderUploadHistory();
   if (name === 'smart') renderSmartMetrics();
+  if (name === 'donations') renderDonations();
 }
 document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
 
@@ -1397,12 +1386,27 @@ function autoDeriveCarFields() {
       c.autoMileage = true;
       updated++;
     }
-    // Sale date is NEVER auto-filled. The user must explicitly enter both a sale price and sale date
-    // for a car to be considered sold. If a previous version auto-filled saleDate, clear it.
-    if (c.autoSaleDate && !c.salePrice) {
-      c.saleDate = null;
-      c.autoSaleDate = false;
-      updated++;
+    // Auto-fill sale date if no activity in 90+ days
+    const lastTrip = getCarLastTripDate(c.id);
+    if (lastTrip && !c.saleDate && !c.salePrice) {
+      const daysSinceLast = (today - lastTrip) / (1000 * 60 * 60 * 24);
+      if (daysSinceLast > INACTIVE_DAYS_THRESHOLD) {
+        c.saleDate = lastTrip.toISOString().slice(0, 10);
+        c.autoSaleDate = true;
+        updated++;
+      }
+    } else if (c.autoSaleDate && lastTrip) {
+      // Refresh auto sale date if newer trips appeared
+      const daysSinceLast = (today - lastTrip) / (1000 * 60 * 60 * 24);
+      if (daysSinceLast <= INACTIVE_DAYS_THRESHOLD) {
+        // car is active again, clear the auto sale date
+        c.saleDate = null;
+        c.autoSaleDate = false;
+        updated++;
+      } else {
+        const newSaleDate = lastTrip.toISOString().slice(0, 10);
+        if (c.saleDate !== newSaleDate) { c.saleDate = newSaleDate; updated++; }
+      }
     }
     // Auto-fill current value (uses mileage now if available)
     if (!isSold(c) && c.purchasePrice && c.purchaseDate && (!c.currentValue || c.autoValue)) {
@@ -1457,19 +1461,8 @@ function needsCsvReupload() {
 
 function maybeShowReuploadBanner() {
   const banner = document.getElementById('reuploadBanner');
-  if (banner) banner.classList.toggle('hidden', !needsCsvReupload());
-  // Also check protection plan banner
-  const planBanner = document.getElementById('planMissingBanner');
-  if (planBanner) {
-    const missing = fleetMissingPlan();
-    planBanner.classList.toggle('hidden', missing.length === 0);
-    const detail = document.getElementById('planMissingDetail');
-    if (detail && missing.length > 0) {
-      const names = missing.slice(0, 3).map(c => carDisplayName(c)).join(', ');
-      const extra = missing.length > 3 ? ` and ${missing.length - 3} more` : '';
-      detail.textContent = `Missing on: ${names}${extra}. Until each car has a plan set, its earnings show as $0 (since we don't know Turo's cut).`;
-    }
-  }
+  if (!banner) return;
+  banner.classList.toggle('hidden', !needsCsvReupload());
 }
 
 // VIN decode via NHTSA vPIC API (free, no auth, CORS-enabled)
@@ -1606,7 +1599,7 @@ function renderCars() {
     return;
   }
   list.innerHTML = state.cars.map(c => {
-    const earnings = state.trips.filter(t => t.carId === c.id).reduce((s, t) => s + tripEarn(t), 0);
+    const earnings = state.trips.filter(t => t.carId === c.id).reduce((s, t) => s + (Number(t.earnings)||0), 0);
     const expenses = expandExpenses(null, new Date()).filter(e => e.carId === c.id).reduce((s, e) => s + (Number(e.amount)||0), 0);
     const profit = earnings - expenses;
     const roi = carRoi(c);
@@ -1949,7 +1942,7 @@ function totalEarnings(carId, rangeKey) {
     const d = parseDateLoose(t.start);
     if (start && d && d < start) return s;
     if (end && d && d > end) return s;
-    return s + tripEarn(t);
+    return s + (Number(t.earnings) || 0);
   }, 0);
 }
 function totalExpenses(carId, rangeKey) {
@@ -1973,13 +1966,13 @@ function carResaleValue(c) {
   if (c.saleDate || c.salePrice) return Number(c.salePrice) || 0;
   return Number(c.currentValue) || 0;
 }
-function isSold(c) { return !!(c.salePrice && c.saleDate && c.salePrice > 0); }
+function isSold(c) { return !!(c.saleDate || c.salePrice); }
 function activeCars() { return state.cars.filter(c => !isSold(c)); }
 // Returns { lifetimePct, annualPct, years, isAnnualized }
 // annualPct = lifetimePct / years owned. If years < 0.25 (3 months), keeps lifetime to avoid wild numbers.
 function carRoi(c) {
   if (!c.purchasePrice || c.purchasePrice <= 0) return null;
-  const lifeEarn = state.trips.filter(t => t.carId === c.id).reduce((s, t) => s + tripEarn(t), 0);
+  const lifeEarn = state.trips.filter(t => t.carId === c.id).reduce((s, t) => s + (Number(t.earnings)||0), 0);
   const lifeExp = expandExpenses(null, new Date()).filter(e => e.carId === c.id).reduce((s, e) => s + (Number(e.amount)||0), 0);
   const resale = carResaleValue(c);
   const lifetimePct = ((lifeEarn - lifeExp + resale - c.purchasePrice) / c.purchasePrice) * 100;
@@ -2033,7 +2026,7 @@ function carMetrics(c) {
 
   // Days rented from trip days field
   const daysRented = trips.reduce((s, t) => s + (Number(t.tripDays) || 0), 0);
-  const lifeEarn = trips.reduce((s, t) => s + tripEarn(t), 0);
+  const lifeEarn = trips.reduce((s, t) => s + (Number(t.earnings) || 0), 0);
   const lifeExp = expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
 
   // Days in fleet: from purchase date (or first trip start) to today (or sale date)
@@ -2283,9 +2276,8 @@ function openCarDetail(id) {
           ${tripsSorted.slice(0, 10).map(t => {
             const sd = parseDateLoose(t.start);
             const dateLabel = sd ? sd.toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' }) : '—';
-            const tEarn = tripEarn(t);
-            const perDay = t.tripDays > 0 ? tEarn / t.tripDays : null;
-            return `<tr><td class="p-3">${dateLabel}</td><td class="p-3">${t.tripDays || '—'}</td><td class="p-3 text-right font-medium">${fmt$2(tEarn)}</td><td class="p-3 text-right text-slate-500">${perDay ? fmt$2(perDay) : '—'}</td></tr>`;
+            const perDay = t.tripDays > 0 ? t.earnings / t.tripDays : null;
+            return `<tr><td class="p-3">${dateLabel}</td><td class="p-3">${t.tripDays || '—'}</td><td class="p-3 text-right font-medium">${fmt$2(t.earnings)}</td><td class="p-3 text-right text-slate-500">${perDay ? fmt$2(perDay) : '—'}</td></tr>`;
           }).join('')}
         </tbody>
       </table>
@@ -2499,7 +2491,7 @@ function renderCarMonthlyChart(c, m) {
     if (!d) return;
     const idx = months.indexOf(ymKey(d));
     if (idx >= 0) {
-      earningsData[idx] += tripEarn(t);
+      earningsData[idx] += Number(t.earnings) || 0;
       daysData[idx] += Number(t.tripDays) || 0;
     }
   });
@@ -2538,7 +2530,6 @@ function renderCarMonthlyChart(c, m) {
 }
 
 function renderDashboard() {
-  maybeShowReuploadBanner();
   const { start, end } = rangeBounds(currentDashRange);
   // KPIs
   const totEarn = state.cars.reduce((s, c) => s + totalEarnings(c.id), 0);
@@ -2554,7 +2545,7 @@ function renderDashboard() {
   // "Current cars" = active (non-sold). Net cash flow = lifetime earnings - lifetime expenses across all cars.
   const activeValue = activeCars().reduce((s, c) => s + (Number(c.currentValue) || 0), 0);
   const activeInvested = activeCars().reduce((s, c) => s + (Number(c.purchasePrice) || 0), 0);
-  const lifetimeEarn = state.cars.reduce((s, c) => s + state.trips.filter(t => t.carId === c.id).reduce((a, t) => a + tripEarn(t), 0), 0);
+  const lifetimeEarn = state.cars.reduce((s, c) => s + state.trips.filter(t => t.carId === c.id).reduce((a, t) => a + (Number(t.earnings)||0), 0), 0);
   const lifetimeExp = state.cars.reduce((s, c) => s + expandExpenses(null, new Date()).filter(e => e.carId === c.id).reduce((a, e) => a + (Number(e.amount)||0), 0), 0);
   const netCashFlow = lifetimeEarn - lifetimeExp;
   // "Total invested" shown on the right = sum of purchase price for ACTIVE cars only
@@ -2694,8 +2685,8 @@ function renderDashScalingCard() {
   for (const t of state.trips) {
     const d = parseDateLoose(t.start);
     if (!d) continue;
-    if (d >= months3 && d <= today) recent3 += tripEarn(t);
-    else if (d >= months6 && d < months3) prior3 += tripEarn(t);
+    if (d >= months3 && d <= today) recent3 += Number(t.earnings) || 0;
+    else if (d >= months6 && d < months3) prior3 += Number(t.earnings) || 0;
   }
   const trendPct = prior3 > 0 ? ((recent3 - prior3) / prior3) * 100 : null;
   const totalScore = scoreSignal(avgUtil, 75, 30) + scoreSignal(avgAnnualRoi, 25, 0) + scoreSignal(margin, 30, 0) + scoreSignal(trendPct, 20, -10);
@@ -2726,82 +2717,15 @@ function renderDashScalingCard() {
   document.getElementById('dashScalingScore').textContent = totalScore.toFixed(0) + '/100';
 }
 
-let earningsPieInstance = null;
-function renderEarningsPie() {
-  const canvas = document.getElementById('earningsPie');
-  if (!canvas) return;
-  const empty = document.getElementById('pieEmpty');
-  // Sum earnings per car
-  const perCar = state.cars.map(c => {
-    let sum = 0;
-    state.trips.forEach(t => { if (t.carId === c.id) sum += tripEarn(t); });
-    return { car: c, total: sum };
-  }).filter(p => p.total > 0).sort((a, b) => b.total - a.total);
-
-  if (perCar.length === 0) {
-    if (earningsPieInstance) { earningsPieInstance.destroy(); earningsPieInstance = null; }
-    if (empty) empty.classList.remove('hidden');
-    return;
-  }
-  if (empty) empty.classList.add('hidden');
-
-  const labels = perCar.map(p => carDisplayName(p.car));
-  const data = perCar.map(p => p.total);
-  const colors = perCar.map(p => p.car.color || '#6366f1');
-
-  if (earningsPieInstance) earningsPieInstance.destroy();
-  earningsPieInstance = new Chart(canvas, {
-    type: 'doughnut',
-    data: {
-      labels,
-      datasets: [{ data, backgroundColor: colors, borderColor: '#fff', borderWidth: 2 }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      cutout: '60%',
-      plugins: {
-        legend: {
-          position: 'right',
-          labels: { boxWidth: 12, font: { size: 11 } }
-        },
-        tooltip: {
-          callbacks: {
-            label: (c) => {
-              const total = data.reduce((a,b) => a+b, 0);
-              const pct = total > 0 ? ((c.parsed / total) * 100).toFixed(1) : 0;
-              return `${c.label}: ${fmt$2(c.parsed)} (${pct}%)`;
-            }
-          }
-        }
-      }
-    }
-  });
-}
-
 function renderChart() {
-  // Update the big total
-  let bigTripTotal = 0;
-  state.trips.forEach(t => { bigTripTotal += tripEarn(t); });
-  const bigEl = document.getElementById('earningsBigTotal');
-  if (bigEl) bigEl.textContent = fmt$(bigTripTotal) + ' earned';
-  const subEl = document.getElementById('earningsBigSub');
-  if (subEl) subEl.textContent = fuelFeeEnabled() ? 'Total earnings − tolls − gas reimbursement (+$10 fuel fee per gas reimbursement)' : 'Total earnings − tolls − gas reimbursement';
-  const fuelLine = document.getElementById('fuelFeeFormulaLine');
-  if (fuelLine) fuelLine.style.display = fuelFeeEnabled() ? '' : 'none';
-
-  // Render the pie chart (earnings by vehicle)
-  renderEarningsPie();
-
   const ctx = document.getElementById('earningsChart');
-  if (!ctx) return;  // Chart removed from page — nothing to draw
   const empty = document.getElementById('chartEmpty');
   if (state.trips.length === 0 && state.expenses.length === 0) {
     if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
-    if (empty) empty.classList.remove('hidden');
+    empty.classList.remove('hidden');
     return;
   }
-  if (empty) empty.classList.add('hidden');
+  empty.classList.add('hidden');
 
   const { start, end } = rangeBounds(currentDashRange);
   // Build months between earliest data and today
@@ -2826,49 +2750,14 @@ function renderChart() {
   const labels = months.map(ymLabel);
 
   let datasets = [];
-  // Compute totals for the big number + legend
-  let bigTripTotal = 0, bigReimbTotal = 0;
-  state.trips.forEach(t => {
-    const d = parseDateLoose(t.start);
-    if (!d) return;
-    if (start && d < start) return;
-    if (end && d > end) return;
-    bigTripTotal += tripRentalIncome(t);
-    bigReimbTotal += tripReimbursement(t);
-  });
-  const bigEl = document.getElementById('earningsBigTotal');
-  const subEl = document.getElementById('earningsBigSub');
-  if (bigEl) bigEl.textContent = fmt$(bigTripTotal + bigReimbTotal) + ' earned';
-  if (subEl) subEl.textContent = 'Trip earnings (after protection plan) + reimbursements';
-  const legTrip = document.getElementById('legendTrip');
-  const legReimb = document.getElementById('legendReimb');
-  if (legTrip) legTrip.textContent = fmt$(bigTripTotal);
-  if (legReimb) legReimb.textContent = fmt$(bigReimbTotal);
-
-  if (currentChartMode === 'turo') {
-    // Turo-style stacked bars: trip earnings (post-plan) + reimbursements
-    const tripData = months.map(() => 0);
-    const reimbData = months.map(() => 0);
-    state.trips.forEach(t => {
-      const d = parseDateLoose(t.start);
-      if (!d) return;
-      const idx = months.indexOf(ymKey(d));
-      if (idx < 0) return;
-      tripData[idx] += tripRentalIncome(t);
-      reimbData[idx] += tripReimbursement(t);
-    });
-    datasets = [
-      { label: 'Trip earnings', data: tripData, backgroundColor: '#6366f1', borderColor: '#6366f1', stack: 'earnings', borderRadius: 4 },
-      { label: 'Reimbursements', data: reimbData, backgroundColor: '#10b981', borderColor: '#10b981', stack: 'earnings', borderRadius: 4 }
-    ];
-  } else if (currentChartMode === 'stacked') {
+  if (currentChartMode === 'stacked') {
     datasets = state.cars.map(c => {
       const data = months.map(() => 0);
       state.trips.filter(t => t.carId === c.id).forEach(t => {
         const d = parseDateLoose(t.start);
         if (!d) return;
         const idx = months.indexOf(ymKey(d));
-        if (idx >= 0) data[idx] += tripEarn(t);
+        if (idx >= 0) data[idx] += Number(t.earnings) || 0;
       });
       return { label: carDisplayName(c), data, backgroundColor: c.color, borderColor: c.color, stack: 'earnings' };
     });
@@ -2878,7 +2767,7 @@ function renderChart() {
       const d = parseDateLoose(t.start);
       if (!d) return;
       const idx = months.indexOf(ymKey(d));
-      if (idx >= 0) data[idx] += tripEarn(t);
+      if (idx >= 0) data[idx] += Number(t.earnings) || 0;
     });
     datasets = [{ label: 'Total earnings', data, backgroundColor: '#6366f1', borderColor: '#6366f1' }];
   } else if (currentChartMode === 'netprofit') {
@@ -2888,7 +2777,7 @@ function renderChart() {
       const d = parseDateLoose(t.start);
       if (!d) return;
       const idx = months.indexOf(ymKey(d));
-      if (idx >= 0) earnData[idx] += tripEarn(t);
+      if (idx >= 0) earnData[idx] += Number(t.earnings) || 0;
     });
     expandExpenses(minD, maxD).forEach(e => {
       const idx = months.indexOf(ymKey(e.date));
@@ -2919,9 +2808,9 @@ function renderChart() {
         }
       },
       scales: {
-        x: { stacked: currentChartMode === 'stacked' || currentChartMode === 'turo', grid: { display: false } },
+        x: { stacked: currentChartMode === 'stacked', grid: { display: false } },
         y: {
-          stacked: currentChartMode === 'stacked' || currentChartMode === 'turo',
+          stacked: currentChartMode === 'stacked',
           ticks: { callback: (v) => '$' + (v >= 1000 ? (v/1000).toFixed(1) + 'k' : v) },
           grid: { color: '#f1f5f9' }
         }
@@ -2964,38 +2853,18 @@ function handleCsvFiles(files) {
 
           const vehicle = pickField(row, ['Vehicle', 'Vehicle name', 'Car', 'Vehicle Description']);
           const vehicleNameNice = pickField(row, ['Vehicle name']);
-          // Earnings = "Total earnings" column from the CSV.
-          // This is what Turo actually paid you — includes Trip price, Boost, discounts (negative),
-          // delivery, excess miles, late/cleaning/smoking/improper-return fees, tolls/gas reimbursements,
-          // sales tax, etc. — i.e. every dollar that hit your account for the trip.
-          const totalEarningsVal = pickField(row, ['Total earnings', 'Earnings', 'Net earnings', 'Payout', 'Owner earnings', 'Earnings (USD)', 'Amount']);
-          // Tolls & tickets and Gas reimbursement are tracked separately because the user
-          // explicitly subtracts them from earnings (they're pass-through reimbursements).
-          const tollsVal = parseAmount(pickField(row, ['Tolls & tickets', 'Tolls and tickets']));
-          const gasReimbVal = parseAmount(pickField(row, ['Gas reimbursement', 'Gas fee']));
-          // Sum of all classic reimbursement columns (kept for legend display)
-          const reimbursementColumns = [
-            'Tolls & tickets', 'On-trip EV charging', 'Post-trip EV charging', 'Smoking', 'Cleaning',
-            'Fines (paid to host)', 'Fines', 'Gas reimbursement', 'Gas fee', 'Other fees',
-            'Sales tax', 'Airport parking credit'
-          ];
-          let reimbursementsSum = 0;
-          for (const col of reimbursementColumns) {
-            const v = pickField(row, [col]);
-            if (v !== null) reimbursementsSum += parseAmount(v);
-          }
-          const boostVal = parseAmount(pickField(row, ['Boost price']));
+          // Earnings = Trip price + Boost price + Excess distance ONLY
+          // (excludes tolls, gas reimbursement, parking tickets, fines, cleaning, smoking, etc. — those are pass-through reimbursements, not actual earnings)
           const tripPriceVal = pickField(row, ['Trip price']);
           const boostPriceVal = pickField(row, ['Boost price']);
           const excessDistVal = pickField(row, ['Excess distance', 'Additional usage']);
+          const totalEarningsVal = pickField(row, ['Earnings', 'Net earnings', 'Payout', 'Owner earnings', 'Earnings (USD)', 'Total earnings', 'Amount']);
+          // Prefer Trip price + Boost + Excess. Fall back to Total earnings if those columns are absent.
           let earnings;
-          if (totalEarningsVal !== null) {
-            earnings = parseAmount(totalEarningsVal);
-          } else if (tripPriceVal !== null || boostPriceVal !== null || excessDistVal !== null) {
-            // Fallback for older/non-standard exports: best-effort sum of the major components
+          if (tripPriceVal !== null || boostPriceVal !== null || excessDistVal !== null) {
             earnings = parseAmount(tripPriceVal) + parseAmount(boostPriceVal) + parseAmount(excessDistVal);
           } else {
-            earnings = 0;
+            earnings = parseAmount(totalEarningsVal);
           }
           const startDate = pickField(row, ['Trip start', 'Pickup date', 'Trip start date', 'Start date', 'Reservation start', 'Trip Started', 'Pickup']);
           const endDate = pickField(row, ['Trip end', 'Dropoff date', 'Trip end date', 'End date', 'Reservation end', 'Trip Ended', 'Dropoff']);
@@ -3040,26 +2909,9 @@ function handleCsvFiles(files) {
             if (!existing.distance && distNum) { existing.distance = distNum; merged = true; }
             if (!existing.status && status) { existing.status = status; merged = true; }
             if (!existing.end && endDate) { existing.end = endDate; merged = true; }
-            // Update earnings to use Total earnings (or fallback) whenever it differs from what we have
-            if (amount && Math.abs((existing.earnings || 0) - amount) > 0.01) {
+            // Update earnings to use the new calc (Trip price + Boost + Excess) when available
+            if ((tripPriceVal !== null || boostPriceVal !== null || excessDistVal !== null) && Math.abs((existing.earnings || 0) - amount) > 0.01) {
               existing.earnings = amount;
-              merged = true;
-            }
-            // Update reimbursements + tolls + gas + boost on re-upload
-            if (Math.abs((existing.reimbursements || 0) - reimbursementsSum) > 0.01) {
-              existing.reimbursements = reimbursementsSum;
-              merged = true;
-            }
-            if (Math.abs((existing.tollsAndTickets || 0) - tollsVal) > 0.01) {
-              existing.tollsAndTickets = tollsVal;
-              merged = true;
-            }
-            if (Math.abs((existing.gasReimbursement || 0) - gasReimbVal) > 0.01) {
-              existing.gasReimbursement = gasReimbVal;
-              merged = true;
-            }
-            if (Math.abs((existing.boost || 0) - boostVal) > 0.01) {
-              existing.boost = boostVal;
               merged = true;
             }
             if (merged) updatedTrips += 1;
@@ -3079,10 +2931,6 @@ function handleCsvFiles(files) {
             status: status || '',
             odometerStart: odoStart,
             odometerEnd: odoEnd,
-            reimbursements: reimbursementsSum,
-            tollsAndTickets: tollsVal,
-            gasReimbursement: gasReimbVal,
-            boost: boostVal,
             tripId: tripIdSafe,
             source: 'csv',
             sourceFile: file.name,
@@ -3166,18 +3014,7 @@ dropLabel.addEventListener('drop', e => {
 // ============== SETTINGS / EXPORT-IMPORT ==============
 document.getElementById('settingsBtn').addEventListener('click', () => {
   document.getElementById('settingsModal').classList.remove('hidden');
-  // Initialize the fuel-fee toggle from state (default ON)
-  const t = document.getElementById('fuelFeeToggle');
-  if (t) t.checked = (state.fuelFeeEnabled !== false);
 });
-
-function toggleFuelFeeSetting() {
-  state.fuelFeeEnabled = document.getElementById('fuelFeeToggle').checked;
-  saveState();
-  // Recompute everything that depends on earnings
-  renderDashboard();
-  renderCars();
-}
 function exportData() {
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
@@ -3278,7 +3115,7 @@ function renderScaling() {
     const d = parseDateLoose(t.start);
     if (!d || d < yearAgo || d > today) continue;
     trips12mo++;
-    revenue12mo += tripEarn(t);
+    revenue12mo += Number(t.earnings) || 0;
   }
   for (const e of expandExpenses(yearAgo, today)) exp12mo += Number(e.amount) || 0;
   const profit12mo = revenue12mo - exp12mo;
@@ -3301,8 +3138,8 @@ function renderScaling() {
   for (const t of state.trips) {
     const d = parseDateLoose(t.start);
     if (!d) continue;
-    if (d >= m3 && d <= today) { recent3 += tripEarn(t); recentTrips++; }
-    else if (d >= m6 && d < m3) { prior3 += tripEarn(t); priorTrips++; }
+    if (d >= m3 && d <= today) { recent3 += Number(t.earnings) || 0; recentTrips++; }
+    else if (d >= m6 && d < m3) { prior3 += Number(t.earnings) || 0; priorTrips++; }
   }
   const trendPct = prior3 > 0 ? ((recent3 - prior3) / prior3) * 100 : null;
   const trendDirection = trendPct === null ? 'unknown' : (trendPct > 5 ? 'accelerating' : trendPct < -5 ? 'slowing' : 'stable');
@@ -3424,7 +3261,7 @@ function renderScaling() {
     let v = 0;
     for (const t of state.trips) {
       const d = parseDateLoose(t.start);
-      if (d && d >= m && d <= mEnd) v += tripEarn(t);
+      if (d && d >= m && d <= mEnd) v += Number(t.earnings) || 0;
     }
     monthlyRev.push(v);
   }
@@ -3868,7 +3705,7 @@ function renderBottlenecks(currentAnnualProfit, currentCarCount, projectedSize) 
   for (const t of state.trips) {
     const d = parseDateLoose(t.start);
     if (!d || d < yearAgo || d > today) continue;
-    totalRevenue += tripEarn(t);
+    totalRevenue += Number(t.earnings) || 0;
     tripCount12mo++;
   }
 
@@ -4022,78 +3859,120 @@ let tutorialDomObserver = null;
 const TUTORIAL_STEPS = [
   {
     type: 'centered',
-    title: 'Quick tour of the app',
-    body: `<p class="text-slate-600 text-sm leading-relaxed mb-3">Five quick stops so you know where everything lives. Click the highlighted tab on each step to advance.</p>
-      <p class="text-xs text-slate-500">Takes about 60 seconds.</p>`
+    title: 'Welcome — let\'s set up your fleet',
+    body: `<p class="text-slate-600 text-sm leading-relaxed mb-3">This guided tour walks you through the app. Each step highlights the button you need to press — clicking it auto-advances you to the next step.</p>
+      <p class="text-slate-600 text-sm leading-relaxed mb-3">Takes about 3 minutes. Press <b>Next</b> when ready.</p>
+      <div class="bg-indigo-50 border border-indigo-100 rounded-lg p-3 text-xs text-indigo-900">
+        Have your <b>Turo earnings CSVs</b> handy and know roughly what you paid for each car.
+      </div>`
   },
   {
     type: 'spotlight',
     target: '[data-tab="upload"]',
     placement: 'bottom',
-    title: 'Upload CSV',
-    body: `<p class="text-slate-600 text-sm leading-relaxed">Drop your Turo earnings exports here. Cars, VINs, mileage, and earnings auto-populate.</p>`,
+    title: 'Click "Upload CSV"',
+    body: `<p class="text-slate-600 text-sm leading-relaxed">Click the highlighted <b>Upload CSV</b> tab in the header to begin.</p>`,
     advanceOnClick: true
+  },
+  {
+    type: 'spotlight',
+    target: 'label[for="csvInput"]',
+    placement: 'bottom',
+    title: 'Click the dropzone to pick your CSV',
+    body: `<p class="text-slate-600 text-sm leading-relaxed mb-2">Click the highlighted area to choose your Turo earnings CSV (or drag a file onto it).</p>
+      <p class="text-xs text-slate-500">Once a file is selected, the tutorial will continue automatically.</p>`,
+    advanceOnEvent: { selector: '#csvInput', event: 'change' }
   },
   {
     type: 'spotlight',
     target: '[data-tab="cars"]',
     placement: 'bottom',
-    title: 'Cars',
-    body: `<p class="text-slate-600 text-sm leading-relaxed">Add purchase price, date, current value, and loan info for each vehicle. This drives ROI, payback, and depreciation.</p>`,
+    title: 'Click the "Cars" tab',
+    body: `<p class="text-slate-600 text-sm leading-relaxed">Now let's edit your vehicles. Click the highlighted <b>Cars</b> tab.</p>`,
     advanceOnClick: true
   },
   {
     type: 'spotlight',
     target: () => document.querySelector('#carsList > div:not(.text-center)') || Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('Add vehicle')),
     placement: 'bottom',
-    title: 'Open a car',
-    body: `<p class="text-slate-600 text-sm leading-relaxed">Click a car row to open its detail view (or <b>+ Add vehicle</b> if you have none).</p>`,
+    title: 'Click a car (or "+ Add vehicle")',
+    body: `<p class="text-slate-600 text-sm leading-relaxed">Click the highlighted car row to open its edit form. If you have none yet, click <b>+ Add vehicle</b> (also highlighted).</p>`,
     advanceOnClick: true
   },
   {
     type: 'spotlight',
-    target: () => Array.from(document.querySelectorAll('#carDetailModal button')).find(b => b.textContent.trim() === 'Edit'),
-    placement: 'bottom',
-    title: 'Press "Edit"',
-    body: `<p class="text-slate-600 text-sm leading-relaxed">Click <b>Edit</b> to change the car's photo, name, year, purchase price, current value, loan terms, and more.</p>`,
-    advanceOnClick: true
-  },
-  {
-    type: 'spotlight',
-    target: () => Array.from(document.querySelectorAll('#carModal button')).find(b => ['Cancel','Save'].includes(b.textContent.trim())),
+    target: () => Array.from(document.querySelectorAll('#carModal button')).find(b => b.textContent.trim() === 'Save'),
     placement: 'top',
-    title: 'Close the edit form',
-    body: `<p class="text-slate-600 text-sm leading-relaxed">Have a look at the fields you can change. When you're done, click <b>Save</b> (or <b>Cancel</b>) to close this form.</p>`,
+    title: 'Fill in the form, then click "Save"',
+    body: `<p class="text-slate-600 text-sm leading-relaxed mb-2">In the form, enter your <b>purchase price</b>, confirm the <b>purchase date</b>, set <b>current value</b> (or use the KBB lookup link), and toggle <b>Loan / Financing</b> on if it was financed.</p>
+      <p class="text-xs text-slate-500">When done, click the highlighted <b>Save</b> button.</p>`,
     advanceOnClick: true
   },
   {
     type: 'spotlight',
     target: '[data-tab="expenses"]',
     placement: 'bottom',
-    title: 'Expenses',
-    body: `<p class="text-slate-600 text-sm leading-relaxed">Log one-off or recurring costs. Apply to one car or split across many.</p>`,
+    title: 'Click "Expenses"',
+    body: `<p class="text-slate-600 text-sm leading-relaxed">Time to log an expense. Click the highlighted <b>Expenses</b> tab.</p>`,
+    advanceOnClick: true
+  },
+  {
+    type: 'spotlight',
+    target: () => Array.from(document.querySelectorAll('#tab-expenses button')).find(b => b.textContent.includes('Add expense')),
+    placement: 'bottom',
+    title: 'Click "+ Add expense"',
+    body: `<p class="text-slate-600 text-sm leading-relaxed">Click the highlighted <b>+ Add expense</b> button.</p>`,
+    advanceOnClick: true
+  },
+  {
+    type: 'spotlight',
+    target: () => Array.from(document.querySelectorAll('#expenseModal button')).find(b => b.textContent.trim() === 'Save'),
+    placement: 'top',
+    title: 'Fill in the expense, then click "Save"',
+    body: `<p class="text-slate-600 text-sm leading-relaxed mb-2">Pick a car (or split across multiple), enter date and amount, and write a clear description like "oil change" or "delivery to airport."</p>
+      <p class="text-xs text-slate-500">Then click the highlighted <b>Save</b> button.</p>`,
     advanceOnClick: true
   },
   {
     type: 'spotlight',
     target: '[data-tab="dashboard"]',
     placement: 'bottom',
-    title: 'Dashboard',
-    body: `<p class="text-slate-600 text-sm leading-relaxed">Fleet net worth, ROI per car, and earnings chart. Click any car card to drill in.</p>`,
+    title: 'Click "Dashboard"',
+    body: `<p class="text-slate-600 text-sm leading-relaxed">See your numbers come together. Click the highlighted <b>Dashboard</b> tab.</p>`,
+    advanceOnClick: true
+  },
+  {
+    type: 'spotlight',
+    target: () => document.querySelector('#carCards > div:not([class*="border-dashed"])'),
+    placement: 'top',
+    title: 'Click any car card',
+    body: `<p class="text-slate-600 text-sm leading-relaxed">Click the highlighted car card to drill into utilization, ADR, breakeven, payback, and depreciation.</p>`,
+    advanceOnClick: true
+  },
+  {
+    type: 'spotlight',
+    target: () => Array.from(document.querySelectorAll('#carDetailModal button')).find(b => b.textContent.trim() === 'Close'),
+    placement: 'left',
+    title: 'Click "Close" when done browsing',
+    body: `<p class="text-slate-600 text-sm leading-relaxed">Explore the Performance, Depreciation, Earnings, and Expenses sub-tabs, then click the highlighted <b>Close</b> button.</p>`,
     advanceOnClick: true
   },
   {
     type: 'spotlight',
     target: '[data-tab="smart"]',
     placement: 'bottom',
-    title: 'Smart Metrics',
-    body: `<p class="text-slate-600 text-sm leading-relaxed">Best vehicle type to buy next, optimal pricing, and profit projections at scale.</p>`,
+    title: 'Click "Smart Metrics"',
+    body: `<p class="text-slate-600 text-sm leading-relaxed">Last stop. Click the highlighted <b>Smart Metrics</b> tab — vehicle-type analysis, optimal ADR, and profit projections at scale.</p>`,
     advanceOnClick: true
   },
   {
     type: 'centered',
     title: 'You\'re all set',
-    body: `<p class="text-slate-600 text-sm leading-relaxed mb-3">Explore on your own. Replay this tour anytime: <b>Settings</b> (top right) → Show getting-started tutorial.</p>`
+    body: `<p class="text-slate-600 text-sm leading-relaxed mb-3">You did it yourself — now you know how every part of the app works.</p>
+      <div class="bg-emerald-50 border border-emerald-100 rounded-lg p-3 text-xs text-emerald-900 mb-2">
+        Keep logging expenses as they happen. Cars + costs + earnings = real ROI.
+      </div>
+      <p class="text-xs text-slate-500">Replay this tour anytime: <b>Settings</b> (top right) → Show getting-started tutorial.</p>`
   }
 ];
 
@@ -4279,6 +4158,121 @@ window.addEventListener('resize', () => {
 });
 
 
+// ============== DONATIONS / SUGGESTIONS ==============
+// Email destination for upgrade requests + "Get in touch" — change this to forward to a different inbox.
+const FEEDBACK_EMAIL = 'krueger.ryan2@gmail.com';
+
+function openMailtoNoNav(href) {
+  // Use a temp anchor + click so the email client opens without navigating the page away
+  const a = document.createElement('a');
+  a.href = href;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => a.remove(), 100);
+}
+
+function openGetInTouchEmail() {
+  const senderName = (currentUser && currentUser.name) || 'a user';
+  const senderEmail = (currentUser && currentUser.email) || 'unknown';
+  const subject = encodeURIComponent('Turo Tracker — Get in touch');
+  const body = encodeURIComponent(
+    `Hi Ryan,\n\n[Type your message here]\n\n— ${senderName} (${senderEmail})`
+  );
+  openMailtoNoNav(`mailto:${FEEDBACK_EMAIL}?subject=${subject}&body=${body}`);
+}
+
+function addSuggestion() {
+  const title = document.getElementById('suggestionTitle').value.trim();
+  const desc = document.getElementById('suggestionDesc').value.trim();
+  const priority = document.getElementById('suggestionPriority').value;
+  if (!title) { alert('Give your suggestion a title.'); return; }
+  if (!state.suggestions) state.suggestions = [];
+  state.suggestions.unshift({
+    id: uid(),
+    title,
+    description: desc,
+    priority,
+    status: 'open',
+    createdAt: new Date().toISOString()
+  });
+  saveState();
+
+  // Compose an email to the project owner with the suggestion details
+  const priorityLabel = { high: 'Must have', medium: 'Useful', low: 'Nice to have' }[priority] || priority;
+  const senderName = (currentUser && currentUser.name) || 'a user';
+  const senderEmail = (currentUser && currentUser.email) || 'unknown';
+  const subject = encodeURIComponent('Turo Tracker upgrade idea: ' + title);
+  const body = encodeURIComponent(
+    `Upgrade suggestion\n` +
+    `==================\n\n` +
+    `Title: ${title}\n` +
+    `Priority: ${priorityLabel}\n\n` +
+    `Description:\n${desc || '(none)'}\n\n` +
+    `From: ${senderName} (${senderEmail})\n` +
+    `Submitted: ${new Date().toLocaleString()}\n`
+  );
+  openMailtoNoNav(`mailto:${FEEDBACK_EMAIL}?subject=${subject}&body=${body}`);
+
+  document.getElementById('suggestionTitle').value = '';
+  document.getElementById('suggestionDesc').value = '';
+  document.getElementById('suggestionPriority').value = 'medium';
+  renderDonations();
+}
+
+function deleteSuggestion(id) {
+  if (!confirm('Delete this suggestion?')) return;
+  state.suggestions = (state.suggestions || []).filter(s => s.id !== id);
+  saveState();
+  renderDonations();
+}
+
+function toggleSuggestionStatus(id) {
+  const s = (state.suggestions || []).find(x => x.id === id);
+  if (!s) return;
+  s.status = s.status === 'done' ? 'open' : 'done';
+  saveState();
+  renderDonations();
+}
+
+function renderDonations() {
+  const list = state.suggestions || [];
+  const countEl = document.getElementById('suggestionCount');
+  const container = document.getElementById('suggestionsList');
+  if (!container) return;
+  countEl.textContent = list.length === 0 ? '' : `${list.length} suggestion${list.length === 1 ? '' : 's'}`;
+  if (list.length === 0) {
+    container.innerHTML = '<div class="text-center text-sm text-slate-500 py-8">No suggestions yet. Drop your first idea above ↑</div>';
+    return;
+  }
+  const priorityColors = {
+    high: 'bg-rose-100 text-rose-800',
+    medium: 'bg-amber-100 text-amber-800',
+    low: 'bg-slate-100 text-slate-700'
+  };
+  const priorityLabel = { high: 'Must have', medium: 'Useful', low: 'Nice to have' };
+  container.innerHTML = list.map(s => `
+    <div class="border border-slate-200 rounded-lg p-4 mb-3 ${s.status === 'done' ? 'opacity-60 bg-slate-50' : ''}">
+      <div class="flex items-start justify-between gap-3">
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="font-semibold ${s.status === 'done' ? 'line-through' : ''}">${escapeHtml(s.title)}</span>
+            <span class="text-xs px-2 py-0.5 rounded-full font-medium ${priorityColors[s.priority] || priorityColors.medium}">${priorityLabel[s.priority] || 'Useful'}</span>
+            ${s.status === 'done' ? '<span class="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-medium">Done</span>' : ''}
+          </div>
+          ${s.description ? `<p class="text-sm text-slate-600 mt-1.5 whitespace-pre-wrap">${escapeHtml(s.description)}</p>` : ''}
+          <div class="text-xs text-slate-400 mt-2">${new Date(s.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
+        </div>
+        <div class="flex gap-1 flex-shrink-0">
+          <button onclick="toggleSuggestionStatus('${s.id}')" class="text-xs px-2 py-1 text-slate-600 hover:bg-slate-100 rounded" title="${s.status === 'done' ? 'Mark open' : 'Mark done'}">${s.status === 'done' ? '↺' : '✓'}</button>
+          <button onclick="deleteSuggestion('${s.id}')" class="text-xs px-2 py-1 text-rose-600 hover:bg-rose-50 rounded" title="Delete">Delete</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
 // ============== HELPERS ==============
 function escapeHtml(s) {
   return String(s == null ? '' : s)
@@ -4290,7 +4284,6 @@ function escapeHtml(s) {
 authReady.then(async () => {
   STORAGE_KEY = `turoFleetTracker_v1_${currentUser.id}`;
   loadState();              // Load local cache first (fast)
-  ensureProtectionPlans();
   backfillTripDays();
   autoDeriveCarFields();
   maybeShowReuploadBanner();
@@ -4306,7 +4299,6 @@ authReady.then(async () => {
   decodeAllVins().catch(() => {});
   // Pull from Firestore (cloud wins) — then re-render
   await loadFromFirestore();
-  ensureProtectionPlans();
   backfillTripDays();
   autoDeriveCarFields();
   maybeShowReuploadBanner();

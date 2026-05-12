@@ -19,18 +19,11 @@
 <style>
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
   .gradient-bg { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #db2777 100%); }
-  .feature-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
-  .feature-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.15); }
+  .feature-card { transition: transform 0.2s, box-shadow 0.2s; }
+  .feature-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1); }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
   .fade-up { animation: fadeUp 0.6s ease-out; }
   .icon-square { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 10px; }
-  /* Button polish */
-  button, a[href] { transition: opacity 0.15s ease, transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease; }
-  button:active { transform: scale(0.97); }
-  button:focus-visible, a:focus-visible { outline: 2px solid rgba(255,255,255,0.8); outline-offset: 2px; border-radius: 6px; }
-  /* Nav scroll on mobile */
-  header nav { flex-wrap: nowrap; }
-  @media (max-width: 640px) { header .flex.gap-3 { gap: 0.5rem; } }
 </style>
 </head>
 <body class="bg-slate-50 text-slate-900">
