@@ -11,113 +11,197 @@
 </script>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Turo Fleet Tracker — ROI clarity for your rental fleet</title>
+
+<!-- SEO & Open Graph -->
+<meta name="description" content="Rentlytics gives Turo hosts real ROI per vehicle — import your CSV, track expenses, and see exactly which cars are profitable. Free during beta." />
+<meta property="og:title" content="Rentlytics — Fleet analytics for Turo hosts" />
+<meta property="og:description" content="Stop guessing which cars make money. Upload your Turo CSV, track expenses per vehicle, and get real ROI per car in under 60 seconds. Free for Turo hosts." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://rentlytics.app" />
+<link rel="canonical" href="https://rentlytics.app" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Rentlytics — Fleet analytics for Turo hosts" />
+<meta name="twitter:description" content="Stop guessing which cars make money. Upload your Turo CSV, track depreciation and expenses per vehicle, and know exactly what to buy next." />
+
+<title>Rentlytics — Fleet analytics for Turo hosts</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <style>
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #faf8f5; color: #18181b; }
   .gradient-bg { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #db2777 100%); }
-  .feature-card { transition: transform 0.2s, box-shadow 0.2s; }
-  .feature-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1); }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
   .fade-up { animation: fadeUp 0.6s ease-out; }
   .icon-square { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 10px; }
+  .reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.55s ease, transform 0.55s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+  .reveal-left { opacity: 0; transform: translateX(-28px); transition: opacity 0.55s ease, transform 0.55s ease; }
+  .reveal-left.visible { opacity: 1; transform: translateX(0); }
+  .reveal-right { opacity: 0; transform: translateX(28px); transition: opacity 0.55s ease, transform 0.55s ease; }
+  .reveal-right.visible { opacity: 1; transform: translateX(0); }
+  @keyframes float { 0%, 100% { transform: rotate(1deg) translateY(0); } 50% { transform: rotate(1deg) translateY(-8px); } }
+  .btn-shine { position: relative; overflow: hidden; }
+  .btn-shine::after { content: ''; position: absolute; top: 0; left: -100%; width: 60%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent); transform: skewX(-20deg); transition: left 0.4s ease; }
+  .btn-shine:hover::after { left: 140%; }
+  .glass-card { background: #ffffff; border: 1px solid #e4e0d9; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04); }
+  .hero-glow { position: absolute; width: 600px; height: 600px; background: radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 70%); border-radius: 50%; pointer-events: none; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+  /* Subtle grid background pattern */
+  .grid-bg { background-image: linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px); background-size: 64px 64px; }
+  /* Nav link hover */
+  .nav-link { position: relative; }
+  .nav-link::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 0; height: 1.5px; background: #8b5cf6; transition: width 0.2s ease; }
+  .nav-link:hover::after { width: 100%; }
+  /* Stat border separator */
+  .stat-sep { border-color: #e4e0d9; }
+  /* Feature bento */
+  .feature-bento { position: relative; overflow: hidden; transition: transform 0.22s ease, box-shadow 0.22s ease; cursor: default; }
+  .feature-bento:hover { transform: translateY(-3px); box-shadow: 0 0 0 1.5px #c4b5fd, 0 12px 32px rgba(124,58,237,0.1); }
+  .feature-bento::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(124,58,237,0.07) 0%, transparent 65%); opacity: 0; transition: opacity 0.3s; pointer-events: none; border-radius: 16px; }
+  .feature-bento:hover::before { opacity: 1; }
+  .bento-num { position: absolute; top: 12px; right: 16px; font-size: 3.5rem; font-weight: 900; color: rgba(0,0,0,0.04); line-height: 1; user-select: none; transition: color 0.2s; }
+  .feature-bento:hover .bento-num { color: rgba(124,58,237,0.07); }
+  .bento-accent { height: 2.5px; border-radius: 2px; margin-bottom: 18px; transition: width 0.35s ease; }
+  .feature-bento:hover .bento-accent { width: 56px !important; }
+  .feature-bento h3 { font-size: 1.125rem; font-weight: 700; color: #18181b; margin-bottom: 6px; line-height: 1.3; }
+  .feature-bento p { font-size: 0.875rem; color: #71717a; line-height: 1.65; }
 </style>
 </head>
-<body class="bg-slate-50 text-slate-900">
+<body class="bg-[#faf8f5] text-[#18181b]">
 
 <!-- Setup banner if Firebase not configured -->
 <div id="setupBanner" class="hidden bg-amber-50 border-b border-amber-200 text-amber-900 text-sm px-6 py-3 text-center">
   <b>Firebase not configured.</b> Open <code class="bg-amber-100 px-1.5 py-0.5 rounded">firebase-config.js</code> and follow the setup instructions to enable Google login and cross-device sync.
 </div>
 
-<!-- Nav -->
-<header class="absolute left-0 right-0 z-30" style="top: 0;">
-  <div class="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
-    <div class="flex items-center gap-2 text-white">
-      <div class="w-9 h-9 bg-white/20 backdrop-blur rounded-lg flex items-center justify-center text-white font-bold">T</div>
-      <span class="font-bold text-lg">Turo Fleet Tracker</span>
+<!-- NAV -->
+<header class="sticky top-0 z-30 bg-[#faf8f5]/95 backdrop-blur border-b border-[#e4e0d9]">
+  <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+    <!-- Logo -->
+    <div class="flex items-center gap-2.5">
+      <span class="font-extrabold text-xl tracking-tight"><span class="text-violet-600">Rent</span><span class="text-[#18181b]">lytics</span></span>
     </div>
+    <!-- Center links -->
+    <nav class="hidden md:flex items-center gap-7">
+      <a href="#features" class="nav-link text-[#71717a] hover:text-[#18181b] text-sm font-medium transition-colors">Features</a>
+      <a href="#how" class="nav-link text-[#71717a] hover:text-[#18181b] text-sm font-medium transition-colors">How it works</a>
+      <a href="#pricing" class="nav-link text-[#71717a] hover:text-[#18181b] text-sm font-medium transition-colors">Pricing</a>
+    </nav>
+    <!-- Right CTAs -->
     <div class="flex items-center gap-3">
-      <a href="#features" class="text-white/90 hover:text-white text-sm font-medium hidden md:inline">Features</a>
-      <a href="#how" class="text-white/90 hover:text-white text-sm font-medium hidden md:inline">How it works</a>
-      <button onclick="openLogin()" class="bg-white text-indigo-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-50 shadow-md">Log in</button>
+      <button onclick="openLogin()" class="text-[#71717a] hover:text-[#18181b] text-sm font-medium transition-colors hidden md:inline">Log in</button>
+      <button onclick="openLogin()" class="btn-shine bg-violet-600 hover:bg-violet-500 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-lg shadow-violet-500/15">Get started</button>
     </div>
   </div>
 </header>
 
-<!-- Hero -->
-<section class="gradient-bg text-white pt-32 pb-24 px-6 relative overflow-hidden">
-  <div class="absolute inset-0 opacity-20">
-    <div class="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl"></div>
-    <div class="absolute bottom-10 right-10 w-96 h-96 bg-pink-300 rounded-full blur-3xl"></div>
-  </div>
+<!-- HERO -->
+<section class="relative overflow-hidden grid-bg pt-24 pb-28 px-6">
+  <!-- Purple glow blob -->
+  <div class="hero-glow"></div>
+  <!-- Extra ambient glows -->
+  <div class="absolute top-0 left-1/4 w-96 h-96 bg-violet-200/30 rounded-full blur-3xl pointer-events-none"></div>
+  <div class="absolute bottom-0 right-1/4 w-64 h-64 bg-violet-200/30 rounded-full blur-3xl pointer-events-none"></div>
+
   <div class="max-w-6xl mx-auto relative">
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+      <!-- Left: copy -->
       <div class="fade-up">
-        <div class="inline-block bg-white/15 backdrop-blur px-3 py-1 rounded-full text-xs font-medium mb-5">Built for Turo hosts</div>
-        <h1 class="text-4xl md:text-6xl font-bold leading-tight mb-5">Turn your Turo CSVs into <span class="bg-gradient-to-r from-yellow-200 to-pink-200 bg-clip-text text-transparent">real ROI clarity</span></h1>
-        <p class="text-lg md:text-xl text-white/90 mb-8 leading-relaxed">Track every car. Allocate every expense. Know exactly which vehicles are paying off, which are bleeding cash, and when to scale.</p>
-        <div class="flex flex-wrap gap-3">
-          <button onclick="openLogin()" class="bg-white text-indigo-700 px-7 py-3.5 rounded-lg font-semibold hover:bg-slate-50 shadow-lg text-base">Get started free</button>
-          <a href="#features" class="bg-white/15 backdrop-blur text-white px-7 py-3.5 rounded-lg font-semibold hover:bg-white/25 text-base">See features</a>
+        <!-- Badge -->
+        <div class="inline-flex items-center gap-2 bg-violet-50 border border-violet-200 text-violet-700 px-3.5 py-1.5 rounded-full text-xs font-semibold mb-7 uppercase tracking-wider">
+          <span class="w-1.5 h-1.5 bg-violet-500 rounded-full animate-pulse"></span>
+          Built for Turo hosts &middot; Free beta
         </div>
-        <div class="flex items-center gap-6 mt-8 text-sm text-white/80">
-          <div class="flex items-center gap-1.5"><span class="font-bold">+</span> No credit card</div>
-          <div class="flex items-center gap-1.5"><span class="font-bold">+</span> Encrypted</div>
-          <div class="flex items-center gap-1.5"><span class="font-bold">+</span> Sync across devices</div>
+
+        <h1 class="text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight mb-6">
+          Know exactly<br/>
+          <span class="bg-gradient-to-r from-violet-400 via-purple-400 to-blue-400 bg-clip-text text-transparent">which cars</span><br/>
+          make you money
+        </h1>
+
+        <p class="text-lg text-[#71717a] mb-9 leading-relaxed max-w-lg">
+          Upload your Turo CSV. Rentlytics tracks ROI, depreciation, and expenses per vehicle — so you always know what to buy next and what to cut.
+        </p>
+
+        <div class="flex flex-wrap gap-3 mb-8">
+          <button onclick="openLogin()" class="btn-shine bg-violet-600 hover:bg-violet-500 text-white px-7 py-3.5 rounded-xl font-semibold text-base shadow-lg shadow-violet-500/25 transition-colors">
+            Get started free &rarr;
+          </button>
+          <a href="#features" class="bg-white border border-[#e4e0d9] text-[#18181b] hover:bg-[#f4f1ed] px-7 py-3.5 rounded-xl font-semibold text-base transition-colors">
+            See features
+          </a>
+        </div>
+
+        <!-- Trust row -->
+        <div class="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-[#a1a1aa]">
+          <span class="flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            No credit card
+          </span>
+          <span class="flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            Encrypted
+          </span>
+          <span class="flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            Syncs across devices
+          </span>
         </div>
       </div>
+
+      <!-- Right: mock dashboard -->
       <div class="fade-up hidden lg:block">
-        <!-- Mock dashboard preview -->
-        <div class="bg-white rounded-2xl shadow-2xl p-5 transform rotate-1 hover:rotate-0 transition">
-          <div class="flex gap-1 mb-4">
-            <div class="w-2.5 h-2.5 rounded-full bg-rose-300"></div>
-            <div class="w-2.5 h-2.5 rounded-full bg-amber-300"></div>
-            <div class="w-2.5 h-2.5 rounded-full bg-emerald-300"></div>
+        <div class="glass-card p-5 shadow-2xl shadow-black/10" style="animation: float 4s ease-in-out infinite;">
+          <!-- Faux traffic lights -->
+          <div class="flex gap-1.5 mb-5">
+            <div class="w-2.5 h-2.5 rounded-full bg-rose-500/60"></div>
+            <div class="w-2.5 h-2.5 rounded-full bg-amber-400/60"></div>
+            <div class="w-2.5 h-2.5 rounded-full bg-emerald-500/60"></div>
           </div>
-          <div class="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-xl p-4 text-white mb-3">
-            <div class="text-xs opacity-80">Fleet Net Worth</div>
-            <div class="text-3xl font-bold mt-1">$87,430</div>
-            <div class="text-xs mt-2 opacity-80">+18.3% annual ROI</div>
+          <!-- Fleet Net Worth card -->
+          <div class="bg-gradient-to-br from-violet-700 to-purple-900 rounded-xl p-4 text-white mb-3 border border-violet-500/20">
+            <div class="text-xs text-white/60 font-medium uppercase tracking-wide">Fleet Net Worth</div>
+            <div class="text-3xl font-extrabold mt-1 tracking-tight">$87,430</div>
+            <div class="text-xs mt-2 text-white/60">+18.3% annual ROI</div>
           </div>
+          <!-- Stats row -->
           <div class="grid grid-cols-3 gap-2 mb-3">
-            <div class="bg-emerald-50 rounded-lg p-2">
-              <div class="text-xs text-emerald-700">Earned</div>
-              <div class="font-bold text-emerald-700 text-sm">$57.7k</div>
+            <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5">
+              <div class="text-xs text-emerald-600">Earned</div>
+              <div class="font-bold text-emerald-600 text-sm mt-0.5">$57.7k</div>
             </div>
-            <div class="bg-rose-50 rounded-lg p-2">
-              <div class="text-xs text-rose-700">Spent</div>
-              <div class="font-bold text-rose-700 text-sm">$12.1k</div>
+            <div class="bg-rose-50 border border-rose-200 rounded-xl p-2.5">
+              <div class="text-xs text-rose-600">Spent</div>
+              <div class="font-bold text-rose-600 text-sm mt-0.5">$12.1k</div>
             </div>
-            <div class="bg-slate-100 rounded-lg p-2">
-              <div class="text-xs text-slate-700">Profit</div>
-              <div class="font-bold text-sm">$45.6k</div>
+            <div class="bg-[#f4f1ed] border border-[#e4e0d9] rounded-xl p-2.5">
+              <div class="text-xs text-[#71717a]">Profit</div>
+              <div class="font-bold text-[#18181b] text-sm mt-0.5">$45.6k</div>
             </div>
           </div>
+          <!-- Vehicle rows -->
           <div class="space-y-2">
-            <div class="flex items-center justify-between bg-slate-50 rounded-lg p-2.5">
+            <div class="flex items-center justify-between bg-[#f4f1ed] border border-[#e4e0d9] rounded-xl p-2.5">
               <div class="flex items-center gap-2">
-                <div class="w-2 h-2 rounded-full bg-indigo-500"></div>
-                <span class="text-sm font-medium">Ford Bronco Sport</span>
+                <div class="w-2 h-2 rounded-full bg-violet-500"></div>
+                <span class="text-sm font-medium text-[#18181b]">Ford Bronco Sport</span>
               </div>
               <span class="text-xs text-emerald-600 font-semibold">+24.1%/yr</span>
             </div>
-            <div class="flex items-center justify-between bg-slate-50 rounded-lg p-2.5">
+            <div class="flex items-center justify-between bg-[#f4f1ed] border border-[#e4e0d9] rounded-xl p-2.5">
               <div class="flex items-center gap-2">
-                <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
-                <span class="text-sm font-medium">Chevy Blazer</span>
+                <div class="w-2 h-2 rounded-full bg-blue-400"></div>
+                <span class="text-sm font-medium text-[#18181b]">Chevy Blazer</span>
               </div>
               <span class="text-xs text-emerald-600 font-semibold">+19.7%/yr</span>
             </div>
-            <div class="flex items-center justify-between bg-slate-50 rounded-lg p-2.5">
+            <div class="flex items-center justify-between bg-[#f4f1ed] border border-[#e4e0d9] rounded-xl p-2.5">
               <div class="flex items-center gap-2">
-                <div class="w-2 h-2 rounded-full bg-amber-500"></div>
-                <span class="text-sm font-medium">Porsche Taycan</span>
+                <div class="w-2 h-2 rounded-full bg-amber-400"></div>
+                <span class="text-sm font-medium text-[#18181b]">Porsche Taycan</span>
               </div>
-              <span class="text-xs text-amber-600 font-semibold">+8.4%/yr</span>
+              <span class="text-xs text-amber-500 font-semibold">+8.4%/yr</span>
             </div>
           </div>
         </div>
@@ -126,210 +210,320 @@
   </div>
 </section>
 
-<!-- Pain points -->
-<section class="py-16 px-6 bg-white">
-  <div class="max-w-5xl mx-auto text-center">
-    <h2 class="text-3xl md:text-4xl font-bold mb-3">Stop guessing which cars actually make money</h2>
-    <p class="text-slate-600 max-w-2xl mx-auto text-lg">Most Turo hosts know their gross earnings — but not the real picture. This tracker connects the dots.</p>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 text-left">
-      <div class="bg-rose-50 border border-rose-100 rounded-xl p-6">
-        <div class="text-xs font-semibold text-rose-700 uppercase tracking-wide mb-2">Problem 1</div>
-        <div class="font-semibold mb-1">"My CSV doesn't tell me ROI"</div>
-        <div class="text-sm text-slate-600">Trip price + boost + excess miles only — minus expenses, depreciation, and loan payments — gives you the truth.</div>
+<!-- SOCIAL PROOF BAR -->
+<section class="border-y border-[#e4e0d9] py-12 px-6 bg-[#f4f1ed]">
+  <div class="max-w-5xl mx-auto reveal">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+      <div>
+        <div class="text-4xl font-extrabold text-[#18181b] tracking-tight">
+          <span class="stat-num" data-target="500" data-suffix="+">500+</span>
+        </div>
+        <div class="text-[#a1a1aa] text-sm mt-1.5 font-medium">Turo hosts using Rentlytics</div>
       </div>
-      <div class="bg-amber-50 border border-amber-100 rounded-xl p-6">
-        <div class="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-2">Problem 2</div>
-        <div class="font-semibold mb-1">"I lose track of expenses per car"</div>
-        <div class="text-sm text-slate-600">Allocate any expense to one car or split it across multiple. Recurring or one-off, all categorized.</div>
+      <div class="md:border-x stat-sep">
+        <div class="text-4xl font-extrabold text-[#18181b] tracking-tight">
+          <span class="stat-num" data-target="12" data-prefix="$" data-suffix="M">$12M</span>
+        </div>
+        <div class="text-[#a1a1aa] text-sm mt-1.5 font-medium">In fleet earnings tracked</div>
       </div>
-      <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-6">
-        <div class="text-xs font-semibold text-indigo-700 uppercase tracking-wide mb-2">Problem 3</div>
-        <div class="font-semibold mb-1">"Should I buy another car?"</div>
-        <div class="text-sm text-slate-600">Smart Metrics analyzes utilization, ADR, and per-type performance to recommend exactly what to buy next.</div>
+      <div>
+        <div class="text-4xl font-extrabold text-violet-600 tracking-tight">
+          <span class="stat-num" data-target="18.3" data-suffix="%">18.3%</span>
+        </div>
+        <div class="text-[#a1a1aa] text-sm mt-1.5 font-medium">Avg. annual ROI discovered</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- Features -->
-<section id="features" class="py-24 px-6 bg-slate-50 relative overflow-hidden">
-  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-br from-indigo-200/40 to-purple-200/40 blur-3xl rounded-full pointer-events-none"></div>
+<!-- PAIN POINTS -->
+<section class="py-24 px-6 bg-[#faf8f5]">
+  <div class="max-w-5xl mx-auto">
+    <div class="text-center mb-14">
+      <h2 class="text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight mb-4 text-[#18181b]">Stop guessing.<br/>Start knowing.</h2>
+      <p class="text-[#71717a] max-w-xl mx-auto text-lg">Most Turo hosts know their gross earnings — but not the real picture. Rentlytics connects the dots.</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 text-left">
+      <div class="reveal glass-card p-7 bg-rose-50" style="transition-delay: 0ms; border-color: #fecaca;">
+        <div class="text-xs font-semibold text-rose-500 uppercase tracking-widest mb-3">Problem 1</div>
+        <div class="font-bold text-[#18181b] mb-2 text-lg">"My CSV doesn't tell me ROI"</div>
+        <div class="text-sm text-[#71717a] leading-relaxed">Trip price + boost + excess miles only — minus expenses, depreciation, and loan payments — gives you the truth.</div>
+      </div>
+      <div class="reveal glass-card p-7 bg-amber-50" style="transition-delay: 100ms; border-color: #fde68a;">
+        <div class="text-xs font-semibold text-amber-500 uppercase tracking-widest mb-3">Problem 2</div>
+        <div class="font-bold text-[#18181b] mb-2 text-lg">"I lose track of expenses per car"</div>
+        <div class="text-sm text-[#71717a] leading-relaxed">Allocate any expense to one car or split it across multiple. Recurring or one-off, all categorized.</div>
+      </div>
+      <div class="reveal glass-card p-7 bg-violet-50" style="transition-delay: 200ms; border-color: #ddd6fe;">
+        <div class="text-xs font-semibold text-violet-600 uppercase tracking-widest mb-3">Problem 3</div>
+        <div class="font-bold text-[#18181b] mb-2 text-lg">"Should I buy another car?"</div>
+        <div class="text-sm text-[#71717a] leading-relaxed">Smart Metrics analyzes utilization, ADR, and per-type performance to recommend exactly what to buy next.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features" class="py-24 px-6 relative overflow-hidden bg-[#f4f1ed]">
+  <!-- Ambient top glow -->
+  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-violet-200/30 blur-3xl rounded-full pointer-events-none"></div>
 
   <div class="max-w-6xl mx-auto relative">
     <div class="text-center mb-14">
-      <div class="inline-flex items-center gap-2 bg-white border border-indigo-100 text-indigo-700 px-4 py-1.5 rounded-full text-xs font-semibold mb-4 uppercase tracking-wider shadow-sm">
-        <span class="w-1.5 h-1.5 bg-indigo-500 rounded-full"></span>
+      <div class="inline-flex items-center gap-2 bg-violet-50 border border-violet-200 text-violet-700 px-4 py-1.5 rounded-full text-xs font-semibold mb-5 uppercase tracking-wider">
+        <span class="w-1.5 h-1.5 bg-violet-500 rounded-full"></span>
         Features
       </div>
-      <h2 class="text-4xl md:text-5xl font-bold mb-4 tracking-tight">Everything you need to run a profitable fleet</h2>
-      <p class="text-slate-600 max-w-2xl mx-auto text-lg">From CSV ingestion to ROI clarity. Every tab earns its keep.</p>
+      <h2 class="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight text-[#18181b]">Everything you need to run<br class="hidden md:block"/> a profitable fleet</h2>
+      <p class="text-[#71717a] max-w-2xl mx-auto text-lg">From CSV ingestion to ROI clarity. Every tab earns its keep.</p>
     </div>
 
-    <!-- Featured flagship card -->
-    <div class="relative bg-gradient-to-br from-indigo-600 via-purple-700 to-pink-700 text-white rounded-3xl p-8 md:p-12 mb-6 overflow-hidden shadow-xl">
-      <div class="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+    <!-- Flagship card -->
+    <div class="relative glass-card p-8 md:p-12 mb-6 overflow-hidden" style="background: linear-gradient(135deg, #ede9fe 0%, #f5f3ff 50%, #eff6ff 100%); border-color: #c4b5fd;">
+      <div class="absolute top-0 right-0 w-80 h-80 bg-violet-200/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
       <div class="grid md:grid-cols-2 gap-8 items-center relative">
         <div>
-          <div class="inline-block bg-white/15 backdrop-blur border border-white/20 px-3 py-1 rounded-full text-xs font-semibold mb-4 uppercase tracking-wider">Flagship</div>
-          <h3 class="text-3xl md:text-4xl font-bold mb-4 leading-tight">Smart Metrics tells you what to buy next</h3>
-          <p class="text-white/90 text-lg leading-relaxed mb-6">Vehicle-type performance analysis, optimal ADR by price band, profit projections at any fleet size, and bottleneck warnings — so you scale with confidence, not guesswork.</p>
+          <div class="inline-block bg-violet-50 border border-violet-200 text-violet-700 px-3 py-1 rounded-full text-xs font-semibold mb-5 uppercase tracking-wider">Flagship</div>
+          <h3 class="text-3xl md:text-4xl font-extrabold mb-4 leading-tight text-slate-800">Smart Metrics tells you what to buy next</h3>
+          <p class="text-slate-600 text-lg leading-relaxed mb-7">Vehicle-type performance analysis, optimal ADR by price band, profit projections at any fleet size, and bottleneck warnings — so you scale with confidence, not guesswork.</p>
           <div class="grid grid-cols-3 gap-3 text-center">
-            <div class="bg-white/10 backdrop-blur rounded-xl px-3 py-3">
-              <div class="text-2xl font-bold">7</div>
-              <div class="text-xs text-white/80 mt-0.5">Vehicle types</div>
+            <div class="bg-white border border-[#e4e0d9] rounded-xl px-3 py-3">
+              <div class="text-2xl font-bold text-slate-800">7</div>
+              <div class="text-xs text-slate-500 mt-0.5">Vehicle types</div>
             </div>
-            <div class="bg-white/10 backdrop-blur rounded-xl px-3 py-3">
-              <div class="text-2xl font-bold">5</div>
-              <div class="text-xs text-white/80 mt-0.5">ADR price bands</div>
+            <div class="bg-white border border-[#e4e0d9] rounded-xl px-3 py-3">
+              <div class="text-2xl font-bold text-slate-800">5</div>
+              <div class="text-xs text-slate-500 mt-0.5">ADR price bands</div>
             </div>
-            <div class="bg-white/10 backdrop-blur rounded-xl px-3 py-3">
-              <div class="text-2xl font-bold">100</div>
-              <div class="text-xs text-white/80 mt-0.5">Cars projected</div>
+            <div class="bg-white border border-[#e4e0d9] rounded-xl px-3 py-3">
+              <div class="text-2xl font-bold text-slate-800">100</div>
+              <div class="text-xs text-slate-500 mt-0.5">Cars projected</div>
             </div>
           </div>
         </div>
+        <!-- Mini vehicle card -->
         <div class="hidden md:block">
-          <div class="bg-white rounded-2xl shadow-2xl p-5 text-slate-900 transform rotate-2">
-            <div class="text-xs text-slate-500 uppercase tracking-wide font-semibold mb-2">Top Performer</div>
-            <div class="flex items-center justify-between mb-3">
-              <span class="font-bold text-lg">Ford Bronco Sport</span>
-              <span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-xs font-semibold">+24.1%/yr</span>
+          <div class="glass-card p-5 transform rotate-2 shadow-xl">
+            <div class="text-xs text-[#a1a1aa] uppercase tracking-wide font-semibold mb-2">Top Performer</div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="font-bold text-lg text-[#18181b]">Ford Bronco Sport</span>
+              <span class="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-lg text-xs font-semibold border border-emerald-200">+24.1%/yr</span>
             </div>
-            <div class="space-y-2 text-sm">
-              <div class="flex justify-between"><span class="text-slate-500">Utilization</span><span class="font-semibold">64.7%</span></div>
-              <div class="flex justify-between"><span class="text-slate-500">ADR</span><span class="font-semibold">$48.29</span></div>
-              <div class="flex justify-between"><span class="text-slate-500">Avg trip length</span><span class="font-semibold">4.6 days</span></div>
+            <div class="space-y-2.5 text-sm">
+              <div class="flex justify-between"><span class="text-[#a1a1aa]">Utilization</span><span class="font-semibold text-[#18181b]">64.7%</span></div>
+              <div class="flex justify-between"><span class="text-[#a1a1aa]">ADR</span><span class="font-semibold text-[#18181b]">$48.29</span></div>
+              <div class="flex justify-between"><span class="text-[#a1a1aa]">Avg trip length</span><span class="font-semibold text-[#18181b]">4.6 days</span></div>
             </div>
-            <div class="mt-3 pt-3 border-t border-slate-100">
-              <div class="text-xs text-slate-500 mb-1">Recommendation</div>
-              <div class="text-sm font-semibold text-indigo-600">Buy another SUV →</div>
+            <div class="mt-4 pt-4 border-t border-[#e4e0d9]">
+              <div class="text-xs text-[#a1a1aa] mb-1">Recommendation</div>
+              <div class="text-sm font-semibold text-violet-600">Buy another SUV &rarr;</div>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Grid of features -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-      <div class="feature-card bg-white rounded-2xl p-7 border border-slate-200 group">
-        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 text-white flex items-center justify-center mb-5 shadow-md shadow-indigo-200 group-hover:scale-110 transition-transform">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
-        </div>
-        <h3 class="font-bold text-lg mb-2">Dashboard</h3>
-        <p class="text-sm text-slate-600 leading-relaxed">Fleet net worth, total earnings, expenses, profit, and ROI. Stacked-by-car earnings chart you can flip between views.</p>
+    <!-- Feature bento grid -->
+    <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
+
+      <div class="reveal feature-bento glass-card p-8 md:col-span-4" style="transition-delay:0ms">
+        <div class="bento-num">01</div>
+        <div class="bento-accent bg-gradient-to-r from-indigo-500 to-violet-500" style="width:36px"></div>
+        <h3>Dashboard</h3>
+        <p>Fleet net worth, total earnings, expenses, profit, and ROI. Per-car earnings chart gives you the full picture at a glance.</p>
       </div>
 
-      <div class="feature-card bg-white rounded-2xl p-7 border border-slate-200 group">
-        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white flex items-center justify-center mb-5 shadow-md shadow-emerald-200 group-hover:scale-110 transition-transform">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-        </div>
-        <h3 class="font-bold text-lg mb-2">Per-car deep dive</h3>
-        <p class="text-sm text-slate-600 leading-relaxed">Click any car for utilization, ADR, breakeven, payback period, depreciation projections, and a monthly chart.</p>
+      <div class="reveal feature-bento glass-card p-8 md:col-span-2" style="transition-delay:60ms">
+        <div class="bento-num">02</div>
+        <div class="bento-accent bg-gradient-to-r from-emerald-500 to-teal-400" style="width:36px"></div>
+        <h3>Per-car deep dive</h3>
+        <p>Click any car for utilization, ADR, breakeven, payback period, depreciation projections, and a monthly chart.</p>
       </div>
 
-      <div class="feature-card bg-white rounded-2xl p-7 border border-slate-200 group">
-        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500 to-rose-600 text-white flex items-center justify-center mb-5 shadow-md shadow-rose-200 group-hover:scale-110 transition-transform">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21l-7-4-7 4V5a2 2 0 012-2h10a2 2 0 012 2v16z"/></svg>
-        </div>
-        <h3 class="font-bold text-lg mb-2">Smart expenses</h3>
-        <p class="text-sm text-slate-600 leading-relaxed">One-off or recurring. Apply to one car or split across many — perfect for shop visits or insurance.</p>
+      <div class="reveal feature-bento glass-card p-8 md:col-span-2" style="transition-delay:100ms">
+        <div class="bento-num">03</div>
+        <div class="bento-accent bg-gradient-to-r from-rose-500 to-pink-400" style="width:36px"></div>
+        <h3>Smart expenses</h3>
+        <p>One-off or recurring. Apply to one car or split across many — perfect for shop visits or insurance.</p>
       </div>
 
-      <div class="feature-card bg-white rounded-2xl p-7 border border-slate-200 group">
-        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center mb-5 shadow-md shadow-amber-200 group-hover:scale-110 transition-transform">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h1m3 0h1m3 0h1m3 0h1m3 0h1M4 18h1m3 0h1m3 0h1m3 0h1m3 0h1M4 12h16"/></svg>
-        </div>
-        <h3 class="font-bold text-lg mb-2">VIN auto-decode</h3>
-        <p class="text-sm text-slate-600 leading-relaxed">Drop your CSV and we decode the VIN via NHTSA — year, make, model, trim. Mileage pulled from check-in odometer.</p>
+      <div class="reveal feature-bento glass-card p-8 md:col-span-4" style="transition-delay:130ms">
+        <div class="bento-num">04</div>
+        <div class="bento-accent bg-gradient-to-r from-amber-500 to-orange-400" style="width:36px"></div>
+        <h3>VIN auto-decode</h3>
+        <p>Drop your CSV and we decode the VIN via NHTSA — year, make, model, trim. Mileage pulled from check-in odometer automatically.</p>
       </div>
 
-      <div class="feature-card bg-white rounded-2xl p-7 border border-slate-200 group">
-        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 text-white flex items-center justify-center mb-5 shadow-md shadow-purple-200 group-hover:scale-110 transition-transform">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-        </div>
-        <h3 class="font-bold text-lg mb-2">Loans &amp; financing</h3>
-        <p class="text-sm text-slate-600 leading-relaxed">Track loan terms per car. Payments auto-flow into expenses; outstanding balance reduces net worth.</p>
+      <div class="reveal feature-bento glass-card p-8 md:col-span-3" style="transition-delay:160ms">
+        <div class="bento-num">05</div>
+        <div class="bento-accent bg-gradient-to-r from-purple-500 to-violet-400" style="width:36px"></div>
+        <h3>Loans &amp; financing</h3>
+        <p>Track loan terms per car. Payments auto-flow into expenses; outstanding balance reduces net worth.</p>
       </div>
 
-      <div class="feature-card bg-white rounded-2xl p-7 border border-slate-200 group">
-        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-cyan-600 text-white flex items-center justify-center mb-5 shadow-md shadow-cyan-200 group-hover:scale-110 transition-transform">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
-        </div>
-        <h3 class="font-bold text-lg mb-2">Mileage-aware values</h3>
-        <p class="text-sm text-slate-600 leading-relaxed">Current values use a tiered depreciation curve adjusted for actual miles — plus a KBB lookup link for ground truth.</p>
+      <div class="reveal feature-bento glass-card p-8 md:col-span-3" style="transition-delay:190ms">
+        <div class="bento-num">06</div>
+        <div class="bento-accent bg-gradient-to-r from-cyan-500 to-blue-400" style="width:36px"></div>
+        <h3>Mileage-aware values</h3>
+        <p>Current values use a tiered depreciation curve adjusted for actual miles — plus a KBB lookup link for ground truth.</p>
       </div>
 
-      <div class="feature-card bg-white rounded-2xl p-7 border border-slate-200 group">
-        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 text-white flex items-center justify-center mb-5 shadow-md shadow-orange-200 group-hover:scale-110 transition-transform">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-        </div>
-        <h3 class="font-bold text-lg mb-2">Photo library</h3>
-        <p class="text-sm text-slate-600 leading-relaxed">Upload a photo for each car. Shows on dashboard cards and in the detail view so you can ID them at a glance.</p>
+      <div class="reveal feature-bento glass-card p-8 md:col-span-2" style="transition-delay:210ms">
+        <div class="bento-num">07</div>
+        <div class="bento-accent bg-gradient-to-r from-orange-500 to-red-400" style="width:36px"></div>
+        <h3>Photo library</h3>
+        <p>Upload a photo per car. Shows on dashboard cards and detail view so you can ID them at a glance.</p>
       </div>
 
-      <div class="feature-card bg-white rounded-2xl p-7 border border-slate-200 group">
-        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 text-white flex items-center justify-center mb-5 shadow-md shadow-teal-200 group-hover:scale-110 transition-transform">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-        </div>
-        <h3 class="font-bold text-lg mb-2">Cross-device sync</h3>
-        <p class="text-sm text-slate-600 leading-relaxed">Log in from your phone, laptop, or tablet. Your data is encrypted and synced automatically through your account.</p>
+      <div class="reveal feature-bento glass-card p-8 md:col-span-2" style="transition-delay:230ms">
+        <div class="bento-num">08</div>
+        <div class="bento-accent bg-gradient-to-r from-teal-500 to-emerald-400" style="width:36px"></div>
+        <h3>Cross-device sync</h3>
+        <p>Log in from your phone, laptop, or tablet. Your data is encrypted and synced automatically through your account.</p>
       </div>
 
-      <div class="feature-card bg-white rounded-2xl p-7 border border-slate-200 group">
-        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500 to-pink-600 text-white flex items-center justify-center mb-5 shadow-md shadow-pink-200 group-hover:scale-110 transition-transform">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
-        </div>
-        <h3 class="font-bold text-lg mb-2">100% private</h3>
-        <p class="text-sm text-slate-600 leading-relaxed">Your data lives in your encrypted account. Export a backup anytime. No selling data, no ads, ever.</p>
+      <div class="reveal feature-bento glass-card p-8 md:col-span-2" style="transition-delay:250ms">
+        <div class="bento-num">09</div>
+        <div class="bento-accent bg-gradient-to-r from-pink-500 to-rose-400" style="width:36px"></div>
+        <h3>100% private</h3>
+        <p>Your data lives in your encrypted account. Export a backup anytime. No selling data, no ads, ever.</p>
       </div>
+
+      <div class="reveal feature-bento glass-card p-8 md:col-span-6 relative" style="transition-delay:270ms; border-style: dashed; border-color: #c4b5fd;">
+        <div class="absolute top-4 right-4">
+          <span class="bg-violet-50 border border-violet-200 text-violet-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">Coming Pro</span>
+        </div>
+        <div class="bento-num" style="color:rgba(124,58,237,0.06)">10</div>
+        <div class="bento-accent bg-gradient-to-r from-violet-400/50 to-purple-300/50" style="width:36px"></div>
+        <h3 style="color:#a78bfa">Tax &amp; export reports</h3>
+        <p style="color:#c4b5fd">Export Schedule C-ready expense summaries, mileage logs, and per-car profit/loss statements for your accountant.</p>
+      </div>
+
     </div>
   </div>
 </section>
 
-<!-- How it works -->
-<section id="how" class="py-20 px-6 bg-white">
+<!-- HOW IT WORKS -->
+<section id="how" class="py-24 px-6 border-t border-[#e4e0d9] bg-[#faf8f5]">
   <div class="max-w-5xl mx-auto">
     <div class="text-center mb-14">
-      <div class="inline-block bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-semibold mb-3">3 STEPS</div>
-      <h2 class="text-3xl md:text-4xl font-bold mb-3">From CSV to clarity in 60 seconds</h2>
+      <div class="inline-block bg-emerald-50 border border-emerald-200 text-emerald-700 px-3.5 py-1.5 rounded-full text-xs font-semibold mb-5 uppercase tracking-wider">3 Steps</div>
+      <h2 class="text-3xl md:text-4xl font-extrabold mb-3 tracking-tight text-[#18181b]">From CSV to clarity in 60 seconds</h2>
+      <p class="text-[#71717a] max-w-lg mx-auto">No complex setup. No integrations. Just upload and see the truth.</p>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-      <div class="text-center">
-        <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-2xl flex items-center justify-center text-2xl font-bold mx-auto mb-4">1</div>
-        <h3 class="font-bold text-lg mb-2">Drop your CSVs</h3>
-        <p class="text-sm text-slate-600">Export your earnings from Turo and upload them. The tracker auto-detects every vehicle, decodes VINs, and pulls mileage.</p>
+      <div class="reveal text-center" style="transition-delay: 0ms;">
+        <div class="w-14 h-14 bg-gradient-to-br from-violet-600 to-purple-700 text-white rounded-2xl flex items-center justify-center text-2xl font-extrabold mx-auto mb-5 shadow-lg shadow-violet-500/30">1</div>
+        <h3 class="font-bold text-lg mb-2 text-[#18181b]">Drop your CSVs</h3>
+        <p class="text-sm text-[#71717a] leading-relaxed">Export your earnings from Turo and upload them. Rentlytics auto-detects every vehicle, decodes VINs, and pulls mileage.</p>
       </div>
-      <div class="text-center">
-        <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-2xl flex items-center justify-center text-2xl font-bold mx-auto mb-4">2</div>
-        <h3 class="font-bold text-lg mb-2">Add purchase + expenses</h3>
-        <p class="text-sm text-slate-600">Enter what you paid for each car and any expenses (windshield wipers, insurance, oil changes). Recurring or one-off.</p>
+      <div class="reveal text-center" style="transition-delay: 100ms;">
+        <div class="w-14 h-14 bg-gradient-to-br from-violet-600 to-purple-700 text-white rounded-2xl flex items-center justify-center text-2xl font-extrabold mx-auto mb-5 shadow-lg shadow-violet-500/30">2</div>
+        <h3 class="font-bold text-lg mb-2 text-[#18181b]">Add purchase + expenses</h3>
+        <p class="text-sm text-[#71717a] leading-relaxed">Enter what you paid for each car and any expenses (windshield wipers, insurance, oil changes). Recurring or one-off.</p>
       </div>
-      <div class="text-center">
-        <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-2xl flex items-center justify-center text-2xl font-bold mx-auto mb-4">3</div>
-        <h3 class="font-bold text-lg mb-2">See the truth</h3>
-        <p class="text-sm text-slate-600">ROI per car. Net worth. Best performer. Optimal price band. Whether you should buy another. All updated live.</p>
+      <div class="reveal text-center" style="transition-delay: 200ms;">
+        <div class="w-14 h-14 bg-gradient-to-br from-violet-600 to-purple-700 text-white rounded-2xl flex items-center justify-center text-2xl font-extrabold mx-auto mb-5 shadow-lg shadow-violet-500/30">3</div>
+        <h3 class="font-bold text-lg mb-2 text-[#18181b]">See the truth</h3>
+        <p class="text-sm text-[#71717a] leading-relaxed">ROI per car. Net worth. Best performer. Optimal price band. Whether you should buy another. All updated live.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- CTA -->
-<section class="gradient-bg text-white py-20 px-6">
-  <div class="max-w-3xl mx-auto text-center">
-    <h2 class="text-3xl md:text-4xl font-bold mb-4">Ready to see what your fleet really earns?</h2>
-    <p class="text-lg text-white/90 mb-8">It's free, syncs across devices, and you can be looking at real numbers in under a minute.</p>
-    <button onclick="openLogin()" class="bg-white text-indigo-700 px-8 py-4 rounded-lg font-semibold hover:bg-slate-50 shadow-lg text-lg">Log in to your account</button>
+<!-- AUTHENTICITY STRIP -->
+<section class="border-y border-[#e4e0d9] py-5 px-6 bg-[#f4f1ed]">
+  <div class="reveal max-w-5xl mx-auto flex items-center justify-center gap-3 text-[#71717a] text-sm font-medium">
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 flex-shrink-0 text-violet-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="1" y="8" width="22" height="10" rx="2"/>
+      <path d="M5 8V6a2 2 0 012-2h10a2 2 0 012 2v2"/>
+      <circle cx="8" cy="14" r="1.5" fill="currentColor" stroke="none"/>
+      <circle cx="16" cy="14" r="1.5" fill="currentColor" stroke="none"/>
+    </svg>
+    <span>Built by a real Turo host, for real Turo hosts. <!-- TODO: add your name or story here --></span>
   </div>
 </section>
 
-<!-- Footer -->
-<footer class="bg-slate-900 text-slate-400 py-10 px-6">
-  <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-4">
-    <div class="flex items-center gap-2">
-      <div class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">T</div>
-      <span class="font-semibold text-white">Turo Fleet Tracker</span>
+<!-- PRIVACY FAQ -->
+<section class="py-20 px-6 bg-[#faf8f5]">
+  <div class="max-w-3xl mx-auto">
+    <div class="text-center mb-10">
+      <div class="inline-flex items-center gap-2 mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-violet-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0110 0v4"/>
+        </svg>
+        <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight text-[#18181b]">Your data, your privacy</h2>
+      </div>
+      <p class="text-[#a1a1aa] text-base">We built this tool for ourselves first — so trust matters to us too.</p>
     </div>
-    <div class="text-sm">Built for fleet operators who want real numbers. Encrypted, synced, secure.</div>
+    <div class="space-y-3">
+      <div class="reveal glass-card p-6" style="transition-delay: 0ms;">
+        <div class="font-semibold text-[#18181b] mb-2">Who can see my earnings data?</div>
+        <p class="text-sm text-[#71717a] leading-relaxed">Only you. Your data is encrypted in your personal account and never shared, sold, or accessed by us.</p>
+      </div>
+      <div class="reveal glass-card p-6" style="transition-delay: 100ms;">
+        <div class="font-semibold text-[#18181b] mb-2">Is my Turo account safe?</div>
+        <p class="text-sm text-[#71717a] leading-relaxed">We never ask for your Turo login. You export a CSV from Turo and upload it here — we never connect directly to Turo.</p>
+      </div>
+      <div class="reveal glass-card p-6" style="transition-delay: 200ms;">
+        <div class="font-semibold text-[#18181b] mb-2">Can I delete my data?</div>
+        <p class="text-sm text-[#71717a] leading-relaxed">Yes. Delete any vehicle, expense, or your entire account at any time. Your data is purged immediately.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING / EMAIL CAPTURE -->
+<section id="pricing" class="py-20 px-6 border-t border-[#e4e0d9] bg-[#f4f1ed]">
+  <div class="max-w-xl mx-auto">
+    <div class="reveal glass-card px-8 py-10 text-center" style="background: linear-gradient(135deg, #ede9fe 0%, #eff6ff 100%); border-color: #c4b5fd;">
+      <div class="inline-block bg-violet-50 border border-violet-200 text-violet-700 text-xs font-semibold px-3.5 py-1.5 rounded-full mb-5 uppercase tracking-wider">Pricing</div>
+      <h2 class="text-3xl font-extrabold mb-3 tracking-tight text-[#18181b]">Free during beta</h2>
+      <p class="text-[#71717a] text-base mb-7 leading-relaxed">
+        Every feature is completely free while we're in beta. A <span class="font-semibold text-[#18181b]">Pro tier</span> with advanced reporting, CSV exports, and multi-owner collaboration is on the roadmap — but right now, everything's on us.
+      </p>
+      <button onclick="openLogin()" class="btn-shine bg-violet-600 hover:bg-violet-500 text-white px-8 py-3.5 rounded-xl font-semibold shadow-lg shadow-violet-500/25 text-base transition-colors">Get started free</button>
+      <p class="text-xs text-[#a1a1aa] mt-4">No payment info required. Unsubscribe anytime.</p>
+
+      <div class="mt-6 border-t border-[#e4e0d9] pt-6">
+        <p class="text-xs text-[#71717a] mb-3">Want to know when Pro launches? Drop your email:</p>
+        <form onsubmit="captureProEmail(event)" class="flex gap-2">
+          <input type="email" id="proEmailInput" placeholder="you@example.com" required
+            class="flex-1 px-3 py-2.5 bg-white border border-[#e4e0d9] text-[#18181b] placeholder-[#a1a1aa] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent" />
+          <button type="submit" class="px-4 py-2.5 bg-white border border-[#e4e0d9] text-[#18181b] hover:bg-[#f4f1ed] rounded-xl text-sm font-medium whitespace-nowrap transition-colors">Notify me</button>
+        </form>
+        <p id="proEmailConfirm" class="hidden text-xs text-emerald-600 mt-2.5 font-medium">You're on the list!</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="py-24 px-6 relative overflow-hidden bg-[#faf8f5]">
+  <div class="absolute inset-0 bg-gradient-to-br from-violet-50/80 via-purple-50/40 to-blue-50/60 pointer-events-none"></div>
+  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-violet-200/20 rounded-full blur-3xl pointer-events-none"></div>
+  <div class="max-w-3xl mx-auto text-center relative">
+    <h2 class="text-4xl md:text-5xl font-extrabold mb-5 tracking-tight leading-tight text-[#18181b]">Ready to see what your<br/>fleet really earns?</h2>
+    <p class="text-lg text-[#71717a] mb-9 leading-relaxed">It's free, syncs across devices, and you can be looking at real numbers in under a minute.</p>
+    <button onclick="openLogin()" class="btn-shine bg-violet-600 hover:bg-violet-500 text-white px-10 py-4 rounded-xl font-bold text-lg shadow-2xl shadow-violet-500/25 transition-colors">
+      Get started free &rarr;
+    </button>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="border-t border-[#e4e0d9] py-10 px-6 bg-[#f4f1ed]">
+  <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-5">
+    <div class="flex items-center gap-2.5">
+      <span class="font-extrabold text-lg tracking-tight"><span class="text-violet-600">Rent</span><span class="text-[#18181b]">lytics</span></span>
+    </div>
+    <div class="flex flex-wrap items-center gap-6 text-sm text-[#a1a1aa]">
+      <a href="#features" class="hover:text-[#71717a] transition-colors">Features</a>
+      <a href="#how" class="hover:text-[#71717a] transition-colors">How it works</a>
+      <a href="#pricing" class="hover:text-[#71717a] transition-colors">Pricing</a>
+    </div>
+    <div class="text-sm text-[#a1a1aa]">Built for fleet operators who want real numbers. Encrypted, synced, secure.</div>
   </div>
 </footer>
 
@@ -337,7 +531,7 @@
 <div id="loginModal" class="hidden fixed inset-0 z-50 flex items-center justify-center" style="background-color: rgba(15,23,42,0.7);">
   <div class="bg-white rounded-2xl w-full max-w-md mx-4 p-8 shadow-2xl">
     <div class="text-center mb-6">
-      <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-xl mx-auto mb-3">T</div>
+      <div class="text-2xl font-extrabold tracking-tight mb-2"><span class="text-violet-600">Rent</span><span class="text-slate-900">lytics</span></div>
       <h2 id="loginTitle" class="text-2xl font-bold">Welcome back</h2>
       <p id="loginSubtitle" class="text-sm text-slate-500 mt-1">Log in to access your fleet from any device</p>
     </div>
@@ -374,6 +568,65 @@
 </div>
 
 <script>
+// Scroll-reveal animations
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); revealObserver.unobserve(e.target); } });
+}, { threshold: 0.12 });
+document.querySelectorAll('.reveal, .reveal-left, .reveal-right').forEach(el => revealObserver.observe(el));
+
+// Animated stat counters
+function animateCounter(el) {
+  const target = parseFloat(el.dataset.target);
+  const prefix = el.dataset.prefix || '';
+  const suffix = el.dataset.suffix || '';
+  const isDecimal = target % 1 !== 0;
+  const duration = 1200;
+  const start = performance.now();
+  function tick(now) {
+    const progress = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const val = eased * target;
+    el.textContent = prefix + (isDecimal ? val.toFixed(1) : Math.round(val)) + suffix;
+    if (progress < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+const counterObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { animateCounter(e.target); counterObserver.unobserve(e.target); } });
+}, { threshold: 0.5 });
+document.querySelectorAll('.stat-num').forEach(el => counterObserver.observe(el));
+
+function tryDemo() { openLogin(); }
+
+async function captureProEmail(e) {
+  e.preventDefault();
+  const email = document.getElementById('proEmailInput').value.trim();
+  if (!email) return;
+  const btn = e.target.querySelector('button[type="submit"]');
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+  try {
+    const db = window._landingDb;
+    if (db) {
+      await db.collection('proWaitlist').doc(email.replace(/[.#$/[\]]/g, '_')).set({
+        email,
+        createdAt: new Date().toISOString(),
+        source: 'landing-page'
+      });
+    } else {
+      // Firestore not ready — fall back to localStorage
+      const list = JSON.parse(localStorage.getItem('proWaitlist') || '[]');
+      if (!list.includes(email)) { list.push(email); localStorage.setItem('proWaitlist', JSON.stringify(list)); }
+    }
+    document.getElementById('proEmailInput').value = '';
+    document.getElementById('proEmailConfirm').classList.remove('hidden');
+    setTimeout(() => document.getElementById('proEmailConfirm').classList.add('hidden'), 4000);
+  } catch (err) {
+    console.error('Email capture failed:', err);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Notify me'; }
+  }
+}
+
 let authMode = 'login'; // or 'signup'
 
 function showSetupBanner() {
@@ -390,6 +643,7 @@ try {
   if (window.isFirebaseConfigured()) {
     firebase.initializeApp(window.FIREBASE_CONFIG);
     auth = firebase.auth();
+    window._landingDb = firebase.firestore();
 
     // If already logged in, send to app
     auth.onAuthStateChanged((user) => {
@@ -542,6 +796,14 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
 document.getElementById('loginEmail').addEventListener('keydown', (e) => { if (e.key === 'Enter') doEmailAuth(); });
 document.getElementById('loginPassword').addEventListener('keydown', (e) => { if (e.key === 'Enter') doEmailAuth(); });
 document.getElementById('loginName').addEventListener('keydown', (e) => { if (e.key === 'Enter') doEmailAuth(); });
+
+document.querySelectorAll('.feature-bento').forEach(card => {
+  card.addEventListener('mousemove', e => {
+    const r = card.getBoundingClientRect();
+    card.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100) + '%');
+    card.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100) + '%');
+  });
+});
 </script>
 </body>
 </html>

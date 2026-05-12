@@ -11,7 +11,7 @@
 </script>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Turo Fleet Tracker</title>
+<title>Rentlytics</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -81,6 +81,51 @@
     z-index: 9999;
     pointer-events: none;
   }
+  /* Mobile nav: momentum scroll + hidden scrollbar for clean desktop look */
+  .nav-touch-scroll {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+  }
+  .nav-touch-scroll::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+
+  /* Toast system — use transform+opacity only (no 'all') for GPU-composited animation */
+  #toast-container {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 9000;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    pointer-events: none;
+  }
+  .toast {
+    background: #0f172a;
+    color: white;
+    padding: 0.75rem 1.25rem;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.5;
+    opacity: 0;
+    transform: translateY(10px);
+    /* Only animate transform + opacity — avoids layout reflow (GPU composited) */
+    transition: opacity 0.25s ease-out, transform 0.25s ease-out;
+    pointer-events: auto;
+    max-width: 320px;
+    min-width: 200px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast-icon { flex-shrink: 0; width: 1rem; height: 1rem; }
+  @keyframes cardIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .card-enter { animation: cardIn 0.3s ease-out both; }
+  .tab-panel { transition: opacity 0.15s ease; }
+  .tab-panel.switching { opacity: 0; }
 </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen">
@@ -89,20 +134,18 @@
 <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
   <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
     <div class="flex items-center gap-3">
-      <div class="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold">T</div>
       <div>
-        <h1 class="text-lg font-bold">Turo Fleet Tracker</h1>
+        <h1 class="text-lg font-bold"><span class="text-violet-600">Rent</span>lytics</h1>
         <p class="text-xs text-slate-500">Earnings &amp; expenses by vehicle</p>
       </div>
     </div>
-    <nav class="flex gap-2">
-      <button data-tab="dashboard" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium tab-active">Dashboard</button>
-      <button data-tab="cars" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium tab-inactive">Cars</button>
-      <button data-tab="expenses" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium tab-inactive">Expenses</button>
-      <button data-tab="smart" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium tab-inactive">Smart Metrics</button>
-      <button data-tab="upload" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium tab-inactive">Upload CSV</button>
-      <button data-tab="donations" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium tab-inactive">Donations</button>
-      <button id="settingsBtn" class="px-3 py-2 rounded-lg text-sm font-medium text-slate-500 hover:bg-slate-100" title="Settings">Settings</button>
+    <nav class="flex gap-2 overflow-x-auto pb-1 nav-touch-scroll">
+      <button data-tab="dashboard" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium tab-active whitespace-nowrap flex-shrink-0">Dashboard</button>
+      <button data-tab="cars" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium tab-inactive whitespace-nowrap flex-shrink-0">Cars</button>
+      <button data-tab="expenses" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium tab-inactive whitespace-nowrap flex-shrink-0">Expenses</button>
+      <button data-tab="smart" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium tab-inactive whitespace-nowrap flex-shrink-0">Smart Metrics</button>
+      <button data-tab="upload" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium tab-inactive whitespace-nowrap flex-shrink-0">Upload CSV</button>
+      <button id="settingsBtn" class="px-3 py-2 rounded-lg text-sm font-medium text-slate-500 hover:bg-slate-100 whitespace-nowrap flex-shrink-0" title="Settings">Settings</button>
       <div class="flex items-center gap-2 ml-2 pl-3 border-l border-slate-200">
         <div id="headerUserInitial" class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-sm font-bold flex items-center justify-center">·</div>
         <button onclick="logout()" class="text-xs text-slate-500 hover:text-rose-600 font-medium" title="Log out">Log out</button>
@@ -140,9 +183,24 @@
 
     <!-- Top KPIs -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-      <div class="bg-white rounded-xl p-5 border border-slate-200">
-        <div class="text-xs text-slate-500 uppercase tracking-wide">Total Earnings</div>
+      <div class="relative bg-white rounded-xl p-5 border border-slate-200">
+        <div class="flex items-center gap-1">
+          <div class="text-xs text-slate-500 uppercase tracking-wide">Total Earnings</div>
+          <button onclick="toggleEarningsInfo(event)" class="text-slate-400 hover:text-slate-600 focus:outline-none" title="How this is calculated">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 16v-4m0-4h.01"/></svg>
+          </button>
+        </div>
         <div id="kpiEarnings" class="text-2xl font-bold mt-1 text-emerald-600">$0</div>
+        <div id="earningsInfoDropdown" class="hidden absolute z-20 mt-1 w-72 bg-white border border-slate-200 rounded-xl shadow-lg p-4 text-xs text-slate-600 leading-relaxed">
+          <div class="font-semibold text-slate-800 mb-2">Why this number differs from Turo</div>
+          <ul class="space-y-1.5">
+            <li><span class="text-rose-500 font-medium">− Tolls &amp; tickets</span> — Turo collects these from guests and passes them through to pay tolls/fines. They're not your income.</li>
+            <li><span class="text-rose-500 font-medium">− Gas reimbursement</span> — Same: a pass-through. The guest pays for gas they used. You're being refunded, not earning.</li>
+            <li><span class="text-emerald-600 font-medium">+ $10 per gas trip</span> — Turo pays a $10 bonus on every trip where a gas reimbursement occurs. That IS real income.</li>
+            <li><span class="text-emerald-600 font-medium">✓ Cleaning, delivery &amp; extras included</span> — These are real income and are already included in your Total Earnings from Turo.</li>
+          </ul>
+          <div class="mt-3 pt-3 border-t border-slate-100 text-slate-500">Turo's dashboard shows gross payouts including pass-throughs. This tracker shows your <em>actual net income</em>.</div>
+        </div>
       </div>
       <div class="bg-white rounded-xl p-5 border border-slate-200">
         <div class="text-xs text-slate-500 uppercase tracking-wide">Total Expenses</div>
@@ -178,18 +236,11 @@
 
     <!-- Earnings chart -->
     <div class="bg-white rounded-xl p-6 border border-slate-200 mb-6">
-      <div class="flex items-center justify-between mb-4">
-        <div>
-          <h3 class="font-semibold">Earnings over time</h3>
-          <p class="text-xs text-slate-500">Monthly totals by vehicle</p>
-        </div>
-        <div class="flex gap-1 text-xs bg-slate-100 rounded-lg p-1">
-          <button data-chart="stacked" class="chart-mode-btn px-3 py-1.5 rounded-md bg-white shadow-sm font-medium">By car</button>
-          <button data-chart="total" class="chart-mode-btn px-3 py-1.5 rounded-md text-slate-600">Total</button>
-          <button data-chart="netprofit" class="chart-mode-btn px-3 py-1.5 rounded-md text-slate-600">Net profit</button>
-        </div>
+      <div class="mb-4">
+        <h3 class="font-semibold">Earnings by vehicle</h3>
+        <p class="text-xs text-slate-500">Lifetime earnings per car</p>
       </div>
-      <div class="relative" style="height: 320px;">
+      <div class="relative" style="height: 260px;">
         <canvas id="earningsChart"></canvas>
         <div id="chartEmpty" class="hidden absolute inset-0 flex items-center justify-center text-slate-400 text-sm">
           Upload a Turo CSV to see your earnings chart
@@ -353,60 +404,6 @@
     </div>
   </section>
 
-  <!-- DONATIONS -->
-  <section id="tab-donations" class="tab-panel hidden">
-    <div class="mb-6">
-      <h2 class="text-2xl font-bold">Donations &amp; Feedback</h2>
-      <p class="text-sm text-slate-500">Support the project and shape what gets built next</p>
-    </div>
-
-    <!-- Donation cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-      <div class="bg-gradient-to-br from-indigo-600 to-purple-700 text-white rounded-xl p-6">
-        <h3 class="text-lg font-bold">Support the project</h3>
-        <p class="text-sm opacity-90 mt-1">If this tracker is saving you time, throw a few bucks back. Helps keep features coming.</p>
-        <div class="mt-4 flex gap-2 flex-wrap">
-          <a href="https://buymeacoffee.com/" target="_blank" rel="noopener" class="px-4 py-2 bg-white text-indigo-700 rounded-lg text-sm font-semibold hover:bg-slate-50">Buy Me a Coffee ↗</a>
-          <a href="https://venmo.com/" target="_blank" rel="noopener" class="px-4 py-2 bg-white/15 text-white rounded-lg text-sm font-semibold hover:bg-white/25">Venmo ↗</a>
-          <a href="https://paypal.com/" target="_blank" rel="noopener" class="px-4 py-2 bg-white/15 text-white rounded-lg text-sm font-semibold hover:bg-white/25">PayPal ↗</a>
-        </div>
-      </div>
-      <div class="bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-xl p-6">
-        <h3 class="text-lg font-bold">Sponsor a feature</h3>
-        <p class="text-sm opacity-90 mt-1">Sponsor a specific feature, or commission a custom build for your fleet operation.</p>
-        <div class="mt-4">
-          <a id="getInTouchLink" href="#" onclick="openGetInTouchEmail(); return false;" class="px-4 py-2 bg-white text-emerald-700 rounded-lg text-sm font-semibold hover:bg-slate-50">Get in touch</a>
-        </div>
-      </div>
-    </div>
-
-    <!-- Recommend an upgrade -->
-    <div class="bg-white rounded-xl border border-slate-200 p-6 mb-6">
-      <h3 class="font-semibold mb-1">Recommend an upgrade</h3>
-      <p class="text-xs text-slate-500 mb-4">Got an idea for a feature or improvement? Submit it below — your idea is saved to your account and emailed to the developer for review.</p>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <input type="text" id="suggestionTitle" placeholder="Short title (e.g. 'Add Excel export')" class="md:col-span-2 px-3 py-2 border border-slate-300 rounded-lg text-sm" />
-        <select id="suggestionPriority" class="px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white">
-          <option value="low">Nice to have</option>
-          <option value="medium" selected>Useful</option>
-          <option value="high">Must have</option>
-        </select>
-      </div>
-      <textarea id="suggestionDesc" rows="3" placeholder="Describe what you'd like to see and why it would help your business..." class="w-full mt-3 px-3 py-2 border border-slate-300 rounded-lg text-sm resize-none"></textarea>
-      <div class="flex justify-end mt-3">
-        <button onclick="addSuggestion()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium">Submit suggestion</button>
-      </div>
-    </div>
-
-    <!-- Suggestions list -->
-    <div class="bg-white rounded-xl border border-slate-200 p-6">
-      <div class="flex items-center justify-between mb-3">
-        <h3 class="font-semibold">Your suggestions</h3>
-        <span id="suggestionCount" class="text-xs text-slate-500"></span>
-      </div>
-      <div id="suggestionsList"></div>
-    </div>
-  </section>
 
 </main>
 
@@ -856,7 +853,6 @@ if (!window.isFirebaseConfigured()) {
   alert('Firebase is not configured yet. Open firebase-config.js and follow the setup instructions.');
   window.location.replace('landing.html');
 }
-
 try {
   firebase.initializeApp(window.FIREBASE_CONFIG);
   firebaseAuth = firebase.auth();
@@ -897,7 +893,6 @@ let state = {
 };
 
 let chartInstance = null;
-let currentChartMode = 'stacked';
 let currentDashRange = 'all';
 
 function loadState() {
@@ -952,6 +947,29 @@ async function loadFromFirestore() {
 }
 function uid() { return Math.random().toString(36).slice(2, 10) + Date.now().toString(36); }
 
+function showToast(msg, type = 'default') {
+  const colors = { success: '#16a34a', error: '#dc2626', default: '#0f172a' };
+  // SVG icons: success = checkmark, error = X, default = info circle
+  const icons = {
+    success: `<svg class="toast-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="7"/><path d="M5 8l2 2 4-4"/></svg>`,
+    error:   `<svg class="toast-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="7"/><path d="M5.5 5.5l5 5M10.5 5.5l-5 5"/></svg>`,
+    default: `<svg class="toast-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="7"/><path d="M8 7.5V11M8 5.5v.5"/></svg>`
+  };
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.style.background = colors[type] || colors.default;
+  t.innerHTML = (icons[type] || icons.default) + `<span>${msg}</span>`;
+  document.getElementById('toast-container').appendChild(t);
+  // Double rAF ensures transition plays after element is in DOM and painted
+  requestAnimationFrame(() => { requestAnimationFrame(() => { t.classList.add('show'); }); });
+  // Auto-dismiss: exit animation is faster than enter (UX rule: exit ~60% of enter duration)
+  setTimeout(() => {
+    t.style.transition = 'opacity 0.15s ease-in, transform 0.15s ease-in';
+    t.classList.remove('show');
+    setTimeout(() => t.remove(), 180);
+  }, 3000);
+}
+
 // ============== UTIL ==============
 function fmt$(n) {
   const v = Number(n) || 0;
@@ -960,6 +978,27 @@ function fmt$(n) {
 function fmt$2(n) {
   const v = Number(n) || 0;
   return v.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
+}
+function animateValue(el, endVal, prefix, suffix, decimals) {
+  if (!el) return;
+  const duration = 600;
+  const start = performance.now();
+  const startVal = 0;
+  function tick(now) {
+    const t = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - t, 3);
+    const cur = startVal + (endVal - startVal) * eased;
+    el.textContent = (prefix || '') + (decimals ? cur.toFixed(decimals) : Math.round(cur).toLocaleString()) + (suffix || '');
+    if (t < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+function toggleEarningsInfo(e) {
+  e.stopPropagation();
+  const d = document.getElementById('earningsInfoDropdown');
+  d.classList.toggle('hidden');
+  const close = () => { d.classList.add('hidden'); document.removeEventListener('click', close); };
+  if (!d.classList.contains('hidden')) setTimeout(() => document.addEventListener('click', close), 0);
 }
 function parseDateLoose(s) {
   if (!s) return null;
@@ -1011,8 +1050,10 @@ function parseAmount(s) {
 
 // ============== TABS ==============
 function switchTab(name) {
+  document.querySelectorAll('.tab-panel:not(.hidden)').forEach(p => p.classList.add('switching'));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
   document.getElementById('tab-' + name).classList.remove('hidden');
+  setTimeout(() => { document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('switching')); }, 20);
   document.querySelectorAll('.tab-btn').forEach(b => {
     if (b.dataset.tab === name) { b.classList.add('tab-active'); b.classList.remove('tab-inactive'); }
     else { b.classList.remove('tab-active'); b.classList.add('tab-inactive'); }
@@ -1022,7 +1063,6 @@ function switchTab(name) {
   if (name === 'expenses') renderExpenses();
   if (name === 'upload') renderUploadHistory();
   if (name === 'smart') renderSmartMetrics();
-  if (name === 'donations') renderDonations();
 }
 document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
 
@@ -1572,6 +1612,7 @@ function saveCar() {
     state.cars.push({ id: uid(), ...data });
   }
   saveState();
+  showToast('Vehicle saved!', 'success');
   closeCarModal();
   renderCars();
   renderDashboard();
@@ -1598,7 +1639,7 @@ function renderCars() {
     list.innerHTML = '<div class="p-8 text-center text-slate-500 text-sm">No vehicles yet. Upload a Turo CSV or add one manually.</div>';
     return;
   }
-  list.innerHTML = state.cars.map(c => {
+  list.innerHTML = state.cars.map((c, idx) => {
     const earnings = state.trips.filter(t => t.carId === c.id).reduce((s, t) => s + (Number(t.earnings)||0), 0);
     const expenses = expandExpenses(null, new Date()).filter(e => e.carId === c.id).reduce((s, e) => s + (Number(e.amount)||0), 0);
     const profit = earnings - expenses;
@@ -1614,8 +1655,9 @@ function renderCars() {
     } else if (c.currentValue) {
       priceLine.push('Now worth ' + fmt$(c.currentValue));
     }
+    const delay = Math.min(idx * 50, 300);
     return `
-      <div class="p-4 flex items-center justify-between hover:bg-slate-50 cursor-pointer group" onclick="openCarDetail('${c.id}')">
+      <div class="card-enter p-4 flex items-center justify-between hover:bg-slate-50 cursor-pointer group" style="animation-delay: ${delay}ms" onclick="openCarDetail('${c.id}')">
         <div class="flex items-center gap-3 min-w-0">
           ${c.photo ? `<img src="${c.photo}" class="w-12 h-12 object-cover rounded-lg flex-shrink-0" alt="" />` : ''}
           <span class="car-color-dot flex-shrink-0" style="background-color: ${c.color}"></span>
@@ -1790,6 +1832,7 @@ function saveExpense() {
     }
   }
   saveState();
+  showToast('Expense saved!', 'success');
   closeExpenseModal();
   renderExpenses();
   renderDashboard();
@@ -2535,11 +2578,13 @@ function renderDashboard() {
   const totEarn = state.cars.reduce((s, c) => s + totalEarnings(c.id), 0);
   const totExp = state.cars.reduce((s, c) => s + totalExpenses(c.id), 0);
   const profit = totEarn - totExp;
-  document.getElementById('kpiEarnings').textContent = fmt$(totEarn);
-  document.getElementById('kpiExpenses').textContent = fmt$(totExp);
-  document.getElementById('kpiProfit').textContent = fmt$(profit);
+  animateValue(document.getElementById('kpiEarnings'), totEarn, '$', '', 0);
+  animateValue(document.getElementById('kpiExpenses'), totExp, '$', '', 0);
   document.getElementById('kpiProfit').className = 'text-2xl font-bold mt-1 ' + (profit >= 0 ? 'text-emerald-600' : 'text-rose-600');
-  document.getElementById('kpiCars').textContent = activeCars().length + (state.cars.some(isSold) ? ` (+${state.cars.filter(isSold).length} sold)` : '');
+  animateValue(document.getElementById('kpiProfit'), profit, '$', '', 0);
+  const _kpiCarsEl = document.getElementById('kpiCars');
+  const _soldSuffix = state.cars.some(isSold) ? ` (+${state.cars.filter(isSold).length} sold)` : '';
+  animateValue(_kpiCarsEl, activeCars().length, '', _soldSuffix, 0);
 
   // Net worth = sum of current car values + net cash flow − cost to buy current cars
   // "Current cars" = active (non-sold). Net cash flow = lifetime earnings - lifetime expenses across all cars.
@@ -2593,8 +2638,19 @@ function renderDashboard() {
   const cardsEl = document.getElementById('carCards');
   document.getElementById('carCountLabel').textContent = state.cars.length ? `${state.cars.length} ${state.cars.length === 1 ? 'vehicle' : 'vehicles'}` : '';
   if (state.cars.length === 0) {
-    cardsEl.innerHTML = `<div class="col-span-full bg-white border-2 border-dashed border-slate-200 rounded-xl p-8 text-center text-slate-500">
-      No vehicles yet. <button class="text-indigo-600 font-medium hover:underline" onclick="switchTab('upload')">Upload your first Turo CSV</button> to get started.
+    cardsEl.innerHTML = `<div class="col-span-full bg-white border-2 border-dashed border-slate-300 rounded-2xl p-12 text-center flex flex-col items-center gap-5">
+      <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+        </svg>
+      </div>
+      <div class="max-w-xs">
+        <div class="text-xl font-bold text-slate-800">Upload your first Turo CSV to get started</div>
+        <div class="text-sm text-slate-500 mt-2 leading-relaxed">Go to the <strong class="text-slate-600 font-medium">Upload CSV</strong> tab, drop in your Turo earnings export, and your fleet dashboard populates instantly.</div>
+      </div>
+      <button onclick="switchTab('upload')" class="mt-1 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm" style="min-height:44px">
+        Upload CSV
+      </button>
     </div>`;
   } else {
     const sorted = [...state.cars].sort((a, b) => totalEarnings(b.id) - totalEarnings(a.id));
@@ -2720,115 +2776,53 @@ function renderDashScalingCard() {
 function renderChart() {
   const ctx = document.getElementById('earningsChart');
   const empty = document.getElementById('chartEmpty');
-  if (state.trips.length === 0 && state.expenses.length === 0) {
+  if (state.trips.length === 0) {
+    if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+    empty.classList.remove('hidden');
+    return;
+  }
+
+  const carData = state.cars.map(c => ({
+    label: carDisplayName(c),
+    value: totalEarnings(c.id),
+    color: c.color
+  })).filter(d => d.value > 0);
+
+  if (carData.length === 0) {
     if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
     empty.classList.remove('hidden');
     return;
   }
   empty.classList.add('hidden');
 
-  const { start, end } = rangeBounds(currentDashRange);
-  // Build months between earliest data and today
-  const allDates = [];
-  state.trips.forEach(t => { const d = parseDateLoose(t.start); if (d) allDates.push(d); });
-  state.expenses.forEach(e => { const d = parseDateLoose(e.date); if (d) allDates.push(d); });
-  if (allDates.length === 0) {
-    if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
-    empty.classList.remove('hidden');
-    return;
-  }
-  const minD = start || new Date(Math.min(...allDates));
-  const maxD = end || new Date();
-  // Build month keys
-  const months = [];
-  let cursor = new Date(minD.getFullYear(), minD.getMonth(), 1);
-  while (cursor <= maxD) {
-    months.push(ymKey(cursor));
-    cursor.setMonth(cursor.getMonth() + 1);
-  }
-
-  const labels = months.map(ymLabel);
-
-  let datasets = [];
-  if (currentChartMode === 'stacked') {
-    datasets = state.cars.map(c => {
-      const data = months.map(() => 0);
-      state.trips.filter(t => t.carId === c.id).forEach(t => {
-        const d = parseDateLoose(t.start);
-        if (!d) return;
-        const idx = months.indexOf(ymKey(d));
-        if (idx >= 0) data[idx] += Number(t.earnings) || 0;
-      });
-      return { label: carDisplayName(c), data, backgroundColor: c.color, borderColor: c.color, stack: 'earnings' };
-    });
-  } else if (currentChartMode === 'total') {
-    const data = months.map(() => 0);
-    state.trips.forEach(t => {
-      const d = parseDateLoose(t.start);
-      if (!d) return;
-      const idx = months.indexOf(ymKey(d));
-      if (idx >= 0) data[idx] += Number(t.earnings) || 0;
-    });
-    datasets = [{ label: 'Total earnings', data, backgroundColor: '#6366f1', borderColor: '#6366f1' }];
-  } else if (currentChartMode === 'netprofit') {
-    const earnData = months.map(() => 0);
-    const expData = months.map(() => 0);
-    state.trips.forEach(t => {
-      const d = parseDateLoose(t.start);
-      if (!d) return;
-      const idx = months.indexOf(ymKey(d));
-      if (idx >= 0) earnData[idx] += Number(t.earnings) || 0;
-    });
-    expandExpenses(minD, maxD).forEach(e => {
-      const idx = months.indexOf(ymKey(e.date));
-      if (idx >= 0) expData[idx] += Number(e.amount) || 0;
-    });
-    const profit = earnData.map((v, i) => v - expData[i]);
-    datasets = [
-      { label: 'Earnings', data: earnData, backgroundColor: '#10b981', borderColor: '#10b981', type: 'bar' },
-      { label: 'Expenses', data: expData.map(v => -v), backgroundColor: '#f43f5e', borderColor: '#f43f5e', type: 'bar' },
-      { label: 'Net profit', data: profit, type: 'line', borderColor: '#0f172a', backgroundColor: '#0f172a', tension: 0.3, fill: false }
-    ];
-  }
-
   if (chartInstance) chartInstance.destroy();
   chartInstance = new Chart(ctx, {
-    type: 'bar',
-    data: { labels, datasets },
+    type: 'doughnut',
+    data: {
+      labels: carData.map(d => d.label),
+      datasets: [{
+        data: carData.map(d => d.value),
+        backgroundColor: carData.map(d => d.color),
+        borderColor: '#fff',
+        borderWidth: 3,
+        hoverOffset: 8
+      }]
+    },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
+      cutout: '60%',
       plugins: {
-        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+        legend: { position: 'right', labels: { font: { size: 12 }, padding: 16, usePointStyle: true } },
         tooltip: {
           callbacks: {
-            label: (c) => `${c.dataset.label}: ${fmt$2(Math.abs(c.parsed.y))}`
+            label: ctx => ` ${ctx.label}: ${fmt$(ctx.parsed)}`
           }
-        }
-      },
-      scales: {
-        x: { stacked: currentChartMode === 'stacked', grid: { display: false } },
-        y: {
-          stacked: currentChartMode === 'stacked',
-          ticks: { callback: (v) => '$' + (v >= 1000 ? (v/1000).toFixed(1) + 'k' : v) },
-          grid: { color: '#f1f5f9' }
         }
       }
     }
   });
 }
-
-document.querySelectorAll('.chart-mode-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    currentChartMode = btn.dataset.chart;
-    document.querySelectorAll('.chart-mode-btn').forEach(b => {
-      if (b === btn) { b.classList.add('bg-white', 'shadow-sm', 'font-medium'); b.classList.remove('text-slate-600'); }
-      else { b.classList.remove('bg-white', 'shadow-sm', 'font-medium'); b.classList.add('text-slate-600'); }
-    });
-    renderChart();
-  });
-});
 
 // ============== CSV UPLOAD ==============
 function handleCsvFiles(files) {
@@ -2853,18 +2847,28 @@ function handleCsvFiles(files) {
 
           const vehicle = pickField(row, ['Vehicle', 'Vehicle name', 'Car', 'Vehicle Description']);
           const vehicleNameNice = pickField(row, ['Vehicle name']);
-          // Earnings = Trip price + Boost price + Excess distance ONLY
-          // (excludes tolls, gas reimbursement, parking tickets, fines, cleaning, smoking, etc. — those are pass-through reimbursements, not actual earnings)
           const tripPriceVal = pickField(row, ['Trip price']);
           const boostPriceVal = pickField(row, ['Boost price']);
           const excessDistVal = pickField(row, ['Excess distance', 'Additional usage']);
           const totalEarningsVal = pickField(row, ['Earnings', 'Net earnings', 'Payout', 'Owner earnings', 'Earnings (USD)', 'Total earnings', 'Amount']);
-          // Prefer Trip price + Boost + Excess. Fall back to Total earnings if those columns are absent.
+          // New formula: Total earnings − tolls − gas reimbursement + $10 per gas reimbursement trip
+          // Cleaning, Delivery, Extras are already included in Total earnings and are kept.
+          const tollsVal = pickField(row, ['Tolls & tickets', 'Tolls and tickets', 'Tolls']);
+          const gasReimbVal = pickField(row, ['Gas reimbursement', 'Gas reimb']);
+          const tolls = parseAmount(tollsVal);
+          const gasReimb = parseAmount(gasReimbVal);
+          const gasBonus = gasReimb > 0 ? 10 : 0;
           let earnings;
-          if (tripPriceVal !== null || boostPriceVal !== null || excessDistVal !== null) {
-            earnings = parseAmount(tripPriceVal) + parseAmount(boostPriceVal) + parseAmount(excessDistVal);
+          if (totalEarningsVal !== null && parseAmount(totalEarningsVal) !== 0) {
+            earnings = parseAmount(totalEarningsVal) - tolls - gasReimb + gasBonus;
           } else {
-            earnings = parseAmount(totalEarningsVal);
+            // Fallback for CSVs without a Total earnings column — sum individual components
+            const deliveryVal = pickField(row, ['Delivery']);
+            const cleaningVal = pickField(row, ['Cleaning']);
+            const extrasVal = pickField(row, ['Extras', 'Extra fees']);
+            earnings = parseAmount(tripPriceVal) + parseAmount(boostPriceVal) + parseAmount(excessDistVal)
+                     + parseAmount(deliveryVal) + parseAmount(cleaningVal) + parseAmount(extrasVal)
+                     + gasBonus - tolls - gasReimb;
           }
           const startDate = pickField(row, ['Trip start', 'Pickup date', 'Trip start date', 'Start date', 'Reservation start', 'Trip Started', 'Pickup']);
           const endDate = pickField(row, ['Trip end', 'Dropoff date', 'Trip end date', 'End date', 'Reservation end', 'Trip Ended', 'Dropoff']);
@@ -2909,8 +2913,8 @@ function handleCsvFiles(files) {
             if (!existing.distance && distNum) { existing.distance = distNum; merged = true; }
             if (!existing.status && status) { existing.status = status; merged = true; }
             if (!existing.end && endDate) { existing.end = endDate; merged = true; }
-            // Update earnings to use the new calc (Trip price + Boost + Excess) when available
-            if ((tripPriceVal !== null || boostPriceVal !== null || excessDistVal !== null) && Math.abs((existing.earnings || 0) - amount) > 0.01) {
+            // Update earnings if the recalculated amount differs
+            if (Math.abs((existing.earnings || 0) - amount) > 0.01) {
               existing.earnings = amount;
               merged = true;
             }
@@ -2958,6 +2962,7 @@ function handleCsvFiles(files) {
           // Kick off VIN decode in background
           decodeAllVins().catch(() => {});
           saveState();
+          showToast(`Imported ${importedTrips} trip${importedTrips === 1 ? '' : 's'}!`, 'success');
           resultEl.innerHTML = `
             <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4 text-sm">
               <div class="font-semibold text-emerald-800">Import complete</div>
@@ -4158,126 +4163,120 @@ window.addEventListener('resize', () => {
 });
 
 
-// ============== DONATIONS / SUGGESTIONS ==============
-// Email destination for upgrade requests + "Get in touch" — change this to forward to a different inbox.
-const FEEDBACK_EMAIL = 'krueger.ryan2@gmail.com';
-
-function openMailtoNoNav(href) {
-  // Use a temp anchor + click so the email client opens without navigating the page away
-  const a = document.createElement('a');
-  a.href = href;
-  a.target = '_blank';
-  a.rel = 'noopener';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => a.remove(), 100);
-}
-
-function openGetInTouchEmail() {
-  const senderName = (currentUser && currentUser.name) || 'a user';
-  const senderEmail = (currentUser && currentUser.email) || 'unknown';
-  const subject = encodeURIComponent('Turo Tracker — Get in touch');
-  const body = encodeURIComponent(
-    `Hi Ryan,\n\n[Type your message here]\n\n— ${senderName} (${senderEmail})`
-  );
-  openMailtoNoNav(`mailto:${FEEDBACK_EMAIL}?subject=${subject}&body=${body}`);
-}
-
-function addSuggestion() {
-  const title = document.getElementById('suggestionTitle').value.trim();
-  const desc = document.getElementById('suggestionDesc').value.trim();
-  const priority = document.getElementById('suggestionPriority').value;
-  if (!title) { alert('Give your suggestion a title.'); return; }
-  if (!state.suggestions) state.suggestions = [];
-  state.suggestions.unshift({
-    id: uid(),
-    title,
-    description: desc,
-    priority,
-    status: 'open',
-    createdAt: new Date().toISOString()
-  });
-  saveState();
-
-  // Compose an email to the project owner with the suggestion details
-  const priorityLabel = { high: 'Must have', medium: 'Useful', low: 'Nice to have' }[priority] || priority;
-  const senderName = (currentUser && currentUser.name) || 'a user';
-  const senderEmail = (currentUser && currentUser.email) || 'unknown';
-  const subject = encodeURIComponent('Turo Tracker upgrade idea: ' + title);
-  const body = encodeURIComponent(
-    `Upgrade suggestion\n` +
-    `==================\n\n` +
-    `Title: ${title}\n` +
-    `Priority: ${priorityLabel}\n\n` +
-    `Description:\n${desc || '(none)'}\n\n` +
-    `From: ${senderName} (${senderEmail})\n` +
-    `Submitted: ${new Date().toLocaleString()}\n`
-  );
-  openMailtoNoNav(`mailto:${FEEDBACK_EMAIL}?subject=${subject}&body=${body}`);
-
-  document.getElementById('suggestionTitle').value = '';
-  document.getElementById('suggestionDesc').value = '';
-  document.getElementById('suggestionPriority').value = 'medium';
-  renderDonations();
-}
-
-function deleteSuggestion(id) {
-  if (!confirm('Delete this suggestion?')) return;
-  state.suggestions = (state.suggestions || []).filter(s => s.id !== id);
-  saveState();
-  renderDonations();
-}
-
-function toggleSuggestionStatus(id) {
-  const s = (state.suggestions || []).find(x => x.id === id);
-  if (!s) return;
-  s.status = s.status === 'done' ? 'open' : 'done';
-  saveState();
-  renderDonations();
-}
-
-function renderDonations() {
-  const list = state.suggestions || [];
-  const countEl = document.getElementById('suggestionCount');
-  const container = document.getElementById('suggestionsList');
-  if (!container) return;
-  countEl.textContent = list.length === 0 ? '' : `${list.length} suggestion${list.length === 1 ? '' : 's'}`;
-  if (list.length === 0) {
-    container.innerHTML = '<div class="text-center text-sm text-slate-500 py-8">No suggestions yet. Drop your first idea above ↑</div>';
-    return;
-  }
-  const priorityColors = {
-    high: 'bg-rose-100 text-rose-800',
-    medium: 'bg-amber-100 text-amber-800',
-    low: 'bg-slate-100 text-slate-700'
-  };
-  const priorityLabel = { high: 'Must have', medium: 'Useful', low: 'Nice to have' };
-  container.innerHTML = list.map(s => `
-    <div class="border border-slate-200 rounded-lg p-4 mb-3 ${s.status === 'done' ? 'opacity-60 bg-slate-50' : ''}">
-      <div class="flex items-start justify-between gap-3">
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-2 flex-wrap">
-            <span class="font-semibold ${s.status === 'done' ? 'line-through' : ''}">${escapeHtml(s.title)}</span>
-            <span class="text-xs px-2 py-0.5 rounded-full font-medium ${priorityColors[s.priority] || priorityColors.medium}">${priorityLabel[s.priority] || 'Useful'}</span>
-            ${s.status === 'done' ? '<span class="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-medium">Done</span>' : ''}
-          </div>
-          ${s.description ? `<p class="text-sm text-slate-600 mt-1.5 whitespace-pre-wrap">${escapeHtml(s.description)}</p>` : ''}
-          <div class="text-xs text-slate-400 mt-2">${new Date(s.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
-        </div>
-        <div class="flex gap-1 flex-shrink-0">
-          <button onclick="toggleSuggestionStatus('${s.id}')" class="text-xs px-2 py-1 text-slate-600 hover:bg-slate-100 rounded" title="${s.status === 'done' ? 'Mark open' : 'Mark done'}">${s.status === 'done' ? '↺' : '✓'}</button>
-          <button onclick="deleteSuggestion('${s.id}')" class="text-xs px-2 py-1 text-rose-600 hover:bg-rose-50 rounded" title="Delete">Delete</button>
-        </div>
-      </div>
-    </div>
-  `).join('');
-}
-
 // ============== HELPERS ==============
 function escapeHtml(s) {
   return String(s == null ? '' : s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
+// ============== DEMO CSV LOADER (unused — demo mode disabled) ==============
+async function loadDemoCsv() {
+  if (!DEMO_MODE || state.trips.length > 0) return;
+  try {
+    const resp = await fetch('sample-turo-data.csv');
+    if (!resp.ok) throw new Error('Could not fetch sample-turo-data.csv: ' + resp.status);
+    const csvText = await resp.text();
+    await new Promise((resolve, reject) => {
+      Papa.parse(csvText, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          const rows = results.data;
+          const fileName = 'sample-turo-data.csv';
+          let fileEarn = 0, importedTrips = 0;
+          const carsBefore = state.cars.length;
+          for (const row of rows) {
+            if (Object.values(row).every(v => v === null || v === undefined || String(v).trim() === '')) continue;
+            const vehicle = pickField(row, ['Vehicle', 'Vehicle name', 'Car', 'Vehicle Description']);
+            const vehicleNameNice = pickField(row, ['Vehicle name']);
+            const tripPriceVal = pickField(row, ['Trip price']);
+            const boostPriceVal = pickField(row, ['Boost price']);
+            const excessDistVal = pickField(row, ['Excess distance', 'Additional usage']);
+            const totalEarningsVal = pickField(row, ['Earnings', 'Net earnings', 'Payout', 'Owner earnings', 'Earnings (USD)', 'Total earnings', 'Amount']);
+            // New formula: Total earnings − tolls − gas reimbursement + $10 per gas reimbursement trip
+            const tollsVal = pickField(row, ['Tolls & tickets', 'Tolls and tickets', 'Tolls']);
+            const gasReimbVal = pickField(row, ['Gas reimbursement', 'Gas reimb']);
+            const tolls = parseAmount(tollsVal);
+            const gasReimb = parseAmount(gasReimbVal);
+            const gasBonus = gasReimb > 0 ? 10 : 0;
+            let earnings;
+            if (totalEarningsVal !== null && parseAmount(totalEarningsVal) !== 0) {
+              earnings = parseAmount(totalEarningsVal) - tolls - gasReimb + gasBonus;
+            } else {
+              const deliveryVal = pickField(row, ['Delivery']);
+              const cleaningVal = pickField(row, ['Cleaning']);
+              const extrasVal = pickField(row, ['Extras', 'Extra fees']);
+              earnings = parseAmount(tripPriceVal) + parseAmount(boostPriceVal) + parseAmount(excessDistVal)
+                       + parseAmount(deliveryVal) + parseAmount(cleaningVal) + parseAmount(extrasVal)
+                       + gasBonus - tolls - gasReimb;
+            }
+            const startDate = pickField(row, ['Trip start', 'Pickup date', 'Trip start date', 'Start date', 'Reservation start', 'Trip Started', 'Pickup']);
+            const endDate = pickField(row, ['Trip end', 'Dropoff date', 'Trip end date', 'End date', 'Reservation end', 'Trip Ended', 'Dropoff']);
+            const tripId = pickField(row, ['Trip ID', 'Reservation', 'Reservation ID']);
+            const tripDaysRaw = pickField(row, ['Trip days', 'Days', 'Trip Length', 'Duration']);
+            const distance = pickField(row, ['Distance traveled', 'Distance']);
+            const status = pickField(row, ['Trip status', 'Status']);
+            const vin = pickField(row, ['VIN', 'Vehicle VIN']);
+            const odometerCheckin = pickField(row, ['Check-in odometer', 'Check in odometer', 'Checkin odometer', 'End odometer']);
+            const odometerCheckout = pickField(row, ['Check-out odometer', 'Check out odometer', 'Checkout odometer', 'Start odometer']);
+            if (!vehicle) continue;
+            const amount = earnings;
+            if (amount === 0 && !startDate) continue;
+            const car = findOrCreateCarByName(vehicle, vehicleNameNice);
+            if (vin && !car.vin) car.vin = String(vin).trim().toUpperCase();
+            const tripIdSafe = tripId ? String(tripId).trim() : '';
+            const dedupeKey = tripIdSafe ? `${car.id}:${tripIdSafe}` : `${car.id}:${startDate}:${amount}`;
+            let tripDays = parseFloat(tripDaysRaw);
+            if (!tripDays || isNaN(tripDays)) {
+              const sd = parseDateLoose(startDate);
+              const ed = parseDateLoose(endDate);
+              if (sd && ed) tripDays = Math.max(1, Math.round((ed - sd) / (1000 * 60 * 60 * 24)));
+              else tripDays = 0;
+            }
+            const odoStart = parseFloat(String(odometerCheckout||'').replace(/[^0-9.]/g,'')) || null;
+            const odoEnd = parseFloat(String(odometerCheckin||'').replace(/[^0-9.]/g,'')) || null;
+            const distNum = parseFloat(distance) || 0;
+            if (state.trips.find(t => t._key === dedupeKey)) continue;
+            state.trips.push({
+              id: uid(),
+              _key: dedupeKey,
+              carId: car.id,
+              vehicleName: car.name,
+              start: startDate || null,
+              end: endDate || null,
+              earnings: amount,
+              tripDays,
+              distance: distNum,
+              status: status || '',
+              odometerStart: odoStart,
+              odometerEnd: odoEnd,
+              tripId: tripIdSafe,
+              source: 'csv',
+              sourceFile: fileName,
+              importedAt: new Date().toISOString()
+            });
+            fileEarn += amount;
+            importedTrips += 1;
+          }
+          state.uploads.push({
+            id: uid(),
+            fileName,
+            uploadedAt: new Date().toISOString(),
+            rowCount: rows.length,
+            earningsTotal: fileEarn
+          });
+          autoDeriveCarFields();
+          saveState();
+          resolve();
+        },
+        error: (err) => reject(err)
+      });
+    });
+    switchTab('dashboard');
+  } catch (e) {
+    console.warn('Demo CSV load failed:', e);
+  }
 }
 
 // ============== INIT (after Firebase auth) ==============
@@ -4312,5 +4311,6 @@ authReady.then(async () => {
   }
 });
 </script>
+<div id="toast-container" role="region" aria-live="polite" aria-label="Notifications"></div>
 </body>
 </html>
