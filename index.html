@@ -1401,10 +1401,9 @@ function getCarLastTripDate(carId) {
   return new Date(Math.max(...dates));
 }
 
-const INACTIVE_DAYS_THRESHOLD = 90;
-
-// Auto-derive purchase/sale dates, mileage, current value from CSV data.
+// Auto-derive purchase date, mileage, and current value from CSV data.
 // Only fills fields that are empty OR were previously set automatically.
+// Note: sale date is never auto-set — only manually by the user.
 function autoDeriveCarFields() {
   const today = new Date();
   let updated = 0;
@@ -1423,27 +1422,11 @@ function autoDeriveCarFields() {
       c.autoMileage = true;
       updated++;
     }
-    // Auto-fill sale date if no activity in 90+ days
-    const lastTrip = getCarLastTripDate(c.id);
-    if (lastTrip && !c.saleDate && !c.salePrice) {
-      const daysSinceLast = (today - lastTrip) / (1000 * 60 * 60 * 24);
-      if (daysSinceLast > INACTIVE_DAYS_THRESHOLD) {
-        c.saleDate = lastTrip.toISOString().slice(0, 10);
-        c.autoSaleDate = true;
-        updated++;
-      }
-    } else if (c.autoSaleDate && lastTrip) {
-      // Refresh auto sale date if newer trips appeared
-      const daysSinceLast = (today - lastTrip) / (1000 * 60 * 60 * 24);
-      if (daysSinceLast <= INACTIVE_DAYS_THRESHOLD) {
-        // car is active again, clear the auto sale date
-        c.saleDate = null;
-        c.autoSaleDate = false;
-        updated++;
-      } else {
-        const newSaleDate = lastTrip.toISOString().slice(0, 10);
-        if (c.saleDate !== newSaleDate) { c.saleDate = newSaleDate; updated++; }
-      }
+    // Clear any previously auto-set sale dates (clean up legacy data)
+    if (c.autoSaleDate) {
+      c.saleDate = null;
+      c.autoSaleDate = false;
+      updated++;
     }
     // Auto-fill current value (uses mileage now if available)
     if (!isSold(c) && c.purchasePrice && c.purchaseDate && (!c.currentValue || c.autoValue)) {
