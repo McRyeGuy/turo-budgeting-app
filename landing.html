@@ -15,16 +15,114 @@
 
 <!-- SEO & Open Graph -->
 <meta name="description" content="MileMarker gives Turo hosts real ROI per vehicle — import your CSV, track expenses, and see exactly which cars are profitable. Free during beta." />
-<meta property="og:title" content="MileMarker — Fleet analytics for Turo hosts" />
+<meta name="robots" content="index, follow" />
+<meta name="keywords" content="Turo host analytics, Turo ROI calculator, Turo fleet management, Turo expense tracker, car sharing profit, Turo CSV import, Turo profit per car" />
+<meta property="og:title" content="MileMarker — Fleet Analytics for Turo Hosts" />
 <meta property="og:description" content="Stop guessing which cars make money. Upload your Turo CSV, track expenses per vehicle, and get real ROI per car in under 60 seconds. Free for Turo hosts." />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://milemarker.online" />
-<link rel="canonical" href="https://milemarker.online" />
+<meta property="og:url" content="https://milemarker.online/" />
+<meta property="og:site_name" content="MileMarker" />
+<link rel="canonical" href="https://milemarker.online/" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="MileMarker — Fleet analytics for Turo hosts" />
+<meta name="twitter:title" content="MileMarker — Fleet Analytics for Turo Hosts" />
 <meta name="twitter:description" content="Stop guessing which cars make money. Upload your Turo CSV, track depreciation and expenses per vehicle, and know exactly what to buy next." />
 
-<title>MileMarker — Fleet analytics for Turo hosts</title>
+<title>MileMarker — Fleet Analytics for Turo Hosts</title>
+
+<!-- Structured data: SoftwareApplication -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "MileMarker",
+  "url": "https://milemarker.online/",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD",
+    "description": "Free during beta"
+  },
+  "description": "MileMarker is a fleet analytics tool for Turo car-sharing hosts. Upload your Turo CSV to instantly see ROI per vehicle, track depreciation, log expenses, and get data-driven recommendations on what cars to buy next.",
+  "featureList": [
+    "Per-vehicle ROI tracking",
+    "Turo CSV import",
+    "Expense tracking per car",
+    "Depreciation calculator",
+    "Fleet net worth dashboard",
+    "Smart Metrics and buy recommendations",
+    "Average daily rate optimization"
+  ],
+  "audience": {
+    "@type": "Audience",
+    "audienceType": "Turo hosts and car-sharing fleet owners"
+  },
+  "creator": {
+    "@type": "Organization",
+    "name": "MileMarker",
+    "url": "https://milemarker.online/"
+  }
+}
+</script>
+
+<!-- Structured data: FAQPage -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is MileMarker?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "MileMarker is a free fleet analytics tool for Turo hosts. You upload your Turo earnings CSV and MileMarker automatically calculates ROI per vehicle, tracks expenses, models depreciation, and tells you exactly which cars are profitable."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I track ROI for my Turo fleet?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Export your earnings CSV from the Turo host dashboard, upload it to MileMarker, and enter your purchase price and expenses per car. MileMarker calculates real ROI, payback period, breakeven rate, and utilization for every vehicle automatically."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is MileMarker free for Turo hosts?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Every feature is completely free during the beta period — no credit card required. A Pro tier with advanced reporting and CSV exports is on the roadmap."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Who can see my Turo earnings data?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Only you. Your data is encrypted in your personal account and is never shared, sold, or accessed by MileMarker staff."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does MileMarker connect to my Turo account?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. MileMarker never asks for your Turo login credentials. You export a CSV from Turo and upload it — there is no direct connection to your Turo account."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I delete my data from MileMarker?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. You can delete any vehicle, expense, or your entire account at any time. Your data is purged immediately."
+      }
+    }
+  ]
+}
+</script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
